@@ -1,19 +1,40 @@
 version: 0.2
 
+env:
+  variables:
+    ECR_REPOSITORY: iceberg-lambda-repo
+    AWS_DEFAULT_REGION: ap-south-1
+    PROJECT_DIR: iceberg-incremental-loader  # Add this variable
+
 phases:
+  install:
+    commands:
+      - echo Installing AWS SAM CLI...
+      - pip install aws-sam-cli
+
   pre_build:
     commands:
-      - echo Logging into Amazon ECR...
-      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 595245034069.dkr.ecr.ap-south-1.amazonaws.com/iceberg-lambda-repo
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+
   build:
     commands:
-      - echo Build Docker image with SAM...
-      - cd iceberg-incremental-loader
-      - sam build --use-container
-      - docker tag iceberg-incremental-loader:latest 595245034069.dkr.ecr.ap-south-1.amazonaws.com/iceberg-lambda-repo:latest
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - cd $PROJECT_DIR  # Navigate to the subfolder
+      - docker build -t $ECR_REPOSITORY:latest .
+      - docker tag $ECR_REPOSITORY:latest 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+
   post_build:
     commands:
-      - echo Push to ECR...
-      - docker push 595245034069.dkr.ecr.ap-south-1.amazonaws.com/iceberg-lambda-repo:latest
-      - echo Deploying with SAM...
-      - sam deploy --stack-name iceberg-incremental-loader-stack --capabilities CAPABILITY_NAMED_IAM --region ap-south-1 --image-repository 595245034069.dkr.ecr.ap-south-1.amazonaws.com/iceberg-lambda-repo
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+      - echo Deploying using AWS SAM...
+      - sam deploy --template-file template.yaml --stack-name salesforce-marketing-lambda-stack --image-repository 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset
+
+artifacts:
+  files:
+    - $PROJECT_DIR/imagedefinitions.json  # Updated paths
+    - $PROJECT_DIR/template.yaml
