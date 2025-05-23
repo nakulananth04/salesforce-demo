@@ -93,7 +93,7 @@ def lambda_handler(event, context):
         "CONTACT_ID": random.choice(df_contact["CONTACT_ID"]),
         "LEAD_ID": random.choice(df_lead["LEAD_ID"]),
         "STATUS": random.choice(["Sent", "Responded"]),
-        "FIRST_RESPONDED_DATE": faker.date_time_this_decade(),
+        "FIRST_RESPONDED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31)),
         "CREATED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
     } for _ in range(NUM_CAMPAIGN_MEMBERS)])
     upload_parquet(df_campaign_member, base_path + "campaign_member.parquet")
@@ -147,7 +147,7 @@ def lambda_handler(event, context):
         "ACCOUNT_ID": random.choice(df_account["ACCOUNT_ID"]),
         "STAGE_NAME": random.choice(["Prospecting", "Qualification", "Proposal", "Closed Won", "Closed Lost"]),
         "AMOUNT": round(random.uniform(5000, 100000), 2),
-        "CLOSE_DATE": faker.date_between(start_date='today', end_date='+180d'),
+        "CLOSE_DATE": random_date(datetime.today(), datetime.today() + timedelta(days=180)),
         "CAMPAIGN_ID": random.choice(df_campaign["CAMPAIGN_ID"]),
         "CREATED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
     } for _ in range(NUM_OPPORTUNITIES)])
