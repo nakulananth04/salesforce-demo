@@ -25,6 +25,8 @@ phases:
       - echo Pushing the Docker image...
       - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
       - printf '[{"name":"salesforce-marketing-lambda","imageUri":"%s"}]' 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest > imagedefinitions.json
+      - echo Deploying Lambda function using SAM...
+      - sam deploy --stack-name salesforce-marketing-lambda-stack --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION
 
 artifacts:
   files: imagedefinitions.json
