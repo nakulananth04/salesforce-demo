@@ -4,7 +4,7 @@ phases:
   pre_build:
     commands:
       - echo Logging into Amazon ECR...
-      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin <your-ecr-url>
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 595245034069.dkr.ecr.ap-south-1.amazonaws.com/iceberg-lambda-repo
   build:
     commands:
       - echo Build Docker image with SAM...
