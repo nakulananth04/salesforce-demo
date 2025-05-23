@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Salesforce Marketing Lambda
+
+Resources:
+  SalesforceMarketingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: app.lambda_handler
+      Runtime: python3.9
+      CodeUri: .
+      Timeout: 30
+      MemorySize: 128
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Environment:
+        Variables:
+          ENV_VAR_EXAMPLE: "value"
