@@ -4,6 +4,7 @@ env:
   variables:
     ECR_REPOSITORY: salesforce-marketing-lambda
     AWS_DEFAULT_REGION: ap-south-1
+    PROJECT_DIR: salesforce-marketing-data-generation  # Add this variable
 
 phases:
   install:
@@ -21,6 +22,7 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
+      - cd $PROJECT_DIR  # Navigate to the subfolder
       - docker build -t $ECR_REPOSITORY:latest .
       - docker tag $ECR_REPOSITORY:latest 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
@@ -30,10 +32,9 @@ phases:
       - echo Pushing the Docker image...
       - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
       - echo Deploying using AWS SAM...
-      - sam deploy --template-file template.yaml --stack-name salesforce-marketing-lambda-stack --image-repository 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset --debug
-
+      - sam deploy --template-file $PROJECT_DIR/template.yaml --stack-name salesforce-marketing-lambda-stack --image-repository 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset --debug
 
 artifacts:
   files:
-    - imagedefinitions.json
-    - template.yaml
+    - $PROJECT_DIR/imagedefinitions.json  # Updated paths
+    - $PROJECT_DIR/template.yaml
