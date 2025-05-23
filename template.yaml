@@ -11,4 +11,4 @@ Resources:
       ImageUri: 595245034069.dkr.ecr.ap-south-1.amazonaws.com/salesforce-marketing-lambda:latest
       Timeout: 60
       MemorySize: 512
-      Role: arn:aws:iam::595245034069:role/codebuildrole
+      Role: arn:aws:iam::595245034069:role/salesforce-lambda-execution
