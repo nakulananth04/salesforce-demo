@@ -25,12 +25,21 @@ phases:
       - docker tag $ECR_REPOSITORY:latest 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
   post_build:
-    commands:
-      - echo Build completed on `date`
-      - echo Pushing the Docker image to ECR...
-      - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
-      - echo Deploying using AWS SAM...
-      - sam deploy --template-file template.yaml --stack-name salesforce-marketing-lambda-stack --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset --debug
+  commands:
+    - echo Build completed on `date`
+    - echo Pushing the Docker image...
+    - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+    - echo Deploying using AWS SAM...
+    - sam deploy \
+        --template-file template.yaml \
+        --stack-name salesforce-marketing-lambda-stack \
+        --image-repository 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --region $AWS_DEFAULT_REGION \
+        --no-confirm-changeset \
+        --no-fail-on-empty-changeset \
+        --debug
+
 
 artifacts:
   files:
