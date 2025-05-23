@@ -7,6 +7,7 @@ from pyiceberg.exceptions import PyIcebergException
 
 # Initialize boto3 clients
 ssm = boto3.client('ssm')
+print("Test")
 
 # Constants (can also be env variables)
 PARAM_NAME = "ICEBERG_LAST_UPDATED_SNAPSHOT_ID"
