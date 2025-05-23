@@ -14,29 +14,5 @@ Resources:
       PackageType: Image
       Architectures:
         - x86_64
-      ImageUri: !Sub <your-ecr-url>:latest
-      Role: !GetAtt LambdaExecutionRole.Arn
-
-  LambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: IcebergIncrementalLoaderRole
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: IcebergAccessPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:ListBucket
-                  - ssm:GetParameter
-                  - ssm:PutParameter
-                Resource: "*"
+      ImageUri: !Sub 595245034069.dkr.ecr.ap-south-1.amazonaws.com/iceberg-lambda-repo:latest
+      Role: arn:aws:iam::595245034069:role/salesforce-lambda-execution
