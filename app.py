@@ -49,7 +49,7 @@ def lambda_handler(event, context):
         "ANNUAL_REVENUE": round(random.uniform(1e5, 1e7), 2),
         "CREATED_DATE": faker.date_time_this_decade()
     } for _ in range(NUM_ACCOUNTS)])
-    upload_parquet(df_account, base_path + "ACCOUNT.parquet")
+    upload_parquet(df_account, base_path + "account.parquet")
 
     df_campaign = pd.DataFrame([{
         "CAMPAIGN_ID": random_id(),
@@ -59,7 +59,7 @@ def lambda_handler(event, context):
         "STATUS": random.choice(["Planned", "In Progress", "Completed"]),
         "BUDGET": round(random.uniform(1000, 100000), 2)
     } for _ in range(NUM_CAMPAIGNS)])
-    upload_parquet(df_campaign, base_path + "CAMPAIGN.parquet")
+    upload_parquet(df_campaign, base_path + "campaign.parquet")
 
     df_contact = pd.DataFrame([{
         "CONTACT_ID": random_id(),
@@ -69,7 +69,7 @@ def lambda_handler(event, context):
         "PHONE": faker.phone_number(),
         "CREATED_DATE": faker.date_time_this_decade()
     } for _ in range(NUM_CONTACTS)])
-    upload_parquet(df_contact, base_path + "CONTACT.parquet")
+    upload_parquet(df_contact, base_path + "contact.parquet")
 
     df_lead = pd.DataFrame([{
         "LEAD_ID": random_id(),
@@ -82,7 +82,7 @@ def lambda_handler(event, context):
         "CONVERTED_CONTACT_ID": random.choice(df_contact["CONTACT_ID"]),
         "CREATED_DATE": faker.date_time_this_decade()
     } for _ in range(NUM_LEADS)])
-    upload_parquet(df_lead, base_path + "LEAD.parquet")
+    upload_parquet(df_lead, base_path + "lead.parquet")
 
     df_campaign_member = pd.DataFrame([{
         "MEMBER_ID": random_id(),
@@ -93,7 +93,7 @@ def lambda_handler(event, context):
         "FIRST_RESPONDED_DATE": faker.date_time_this_decade(),
         "CREATED_DATE": faker.date_time_this_decade()
     } for _ in range(NUM_CAMPAIGN_MEMBERS)])
-    upload_parquet(df_campaign_member, base_path + "CAMPAIGN_MEMBER.parquet")
+    upload_parquet(df_campaign_member, base_path + "campaign_member.parquet")
 
     df_template = pd.DataFrame([{
         "TEMPLATE_ID": random_id(),
@@ -102,7 +102,7 @@ def lambda_handler(event, context):
         "HTML_CONTENT": f"<html><body><h1>{faker.catch_phrase()}</h1></body></html>",
         "CREATED_DATE": faker.date_time_this_decade()
     } for _ in range(NUM_EMAIL_TEMPLATES)])
-    upload_parquet(df_template, base_path + "EMAIL_TEMPLATE.parquet")
+    upload_parquet(df_template, base_path + "email_template.parquet")
 
     df_send = pd.DataFrame([{
         "SEND_ID": random_id(),
@@ -112,7 +112,7 @@ def lambda_handler(event, context):
         "SUBJECT_LINE": faker.catch_phrase(),
         "TOTAL_SENT": random.randint(50, 5000)
     } for _ in range(NUM_EMAIL_SENDS)])
-    upload_parquet(df_send, base_path + "EMAIL_SEND.parquet")
+    upload_parquet(df_send, base_path + "email_send.parquet")
 
     df_engagement = pd.DataFrame([{
         "ENGAGEMENT_ID": random_id(),
@@ -123,7 +123,7 @@ def lambda_handler(event, context):
         "ENGAGEMENT_TIMESTAMP": faker.date_time_this_year(),
         "LINK_URL": faker.url()
     } for _ in range(NUM_EMAIL_ENGAGEMENTS)])
-    upload_parquet(df_engagement, base_path + "EMAIL_ENGAGEMENT.parquet")
+    upload_parquet(df_engagement, base_path + "email_engagement.parquet")
 
     df_event = pd.DataFrame([{
         "EVENT_ID": random_id(),
@@ -136,7 +136,7 @@ def lambda_handler(event, context):
         "RELATED_LEAD_ID": random.choice(df_lead["LEAD_ID"]),
         "CREATED_DATE": faker.date_time_this_decade()
     } for _ in range(NUM_EVENTS)])
-    upload_parquet(df_event, base_path + "EVENT.parquet")
+    upload_parquet(df_event, base_path + "event.parquet")
 
     df_opportunity = pd.DataFrame([{
         "OPPORTUNITY_ID": random_id(),
@@ -148,7 +148,7 @@ def lambda_handler(event, context):
         "CAMPAIGN_ID": random.choice(df_campaign["CAMPAIGN_ID"]),
         "CREATED_DATE": faker.date_time_this_decade()
     } for _ in range(NUM_OPPORTUNITIES)])
-    upload_parquet(df_opportunity, base_path + "OPPORTUNITY.parquet")
+    upload_parquet(df_opportunity, base_path + "opportunity.parquet")
 
     return {
         'statusCode': 200,
