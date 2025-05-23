@@ -12,6 +12,8 @@ faker = Faker()
 s3 = boto3.client('s3')
 bucket = 'salesforce-marketing-raw-data'
 
+print("Start")
+
 # === Row counts (edit these to control volume) ===
 NUM_ACCOUNTS = 100
 NUM_CAMPAIGNS = 50
