@@ -8,6 +8,7 @@ phases:
   build:
     commands:
       - echo Build Docker image with SAM...
+      - cd iceberg-incremental-loader
       - sam build --use-container
       - docker tag iceberg-incremental-loader:latest 595245034069.dkr.ecr.ap-south-1.amazonaws.com/iceberg-lambda-repo:latest
   post_build:
