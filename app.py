@@ -34,6 +34,7 @@ def generate_timestamp():
     return datetime.now().strftime('%Y-%m-%d_%H%M%S')
 
 def upload_parquet(df, key):
+    key = key.lower()  # convert filename/key to lowercase
     table = pa.Table.from_pandas(df)
     buf = io.BytesIO()
     pq.write_table(table, buf)
