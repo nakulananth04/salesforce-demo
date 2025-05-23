@@ -42,7 +42,7 @@ def lambda_handler(event, context):
     #         "warehouse": S3_BASE_PATH,
     #     }
     # )
-    catalog = load_catalog("my_glue_catalog")  # No config param
+    catalog = load_catalog(name="my_glue_catalog")
 
     # Example: specify table name here
     table_name = "salesforce.db.campaign"
