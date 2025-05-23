@@ -6,6 +6,13 @@ env:
     AWS_DEFAULT_REGION: ap-south-1
 
 phases:
+  install:
+    runtime-versions:
+      docker: 20
+    commands:
+      - echo Installing AWS SAM CLI...
+      - pip install aws-sam-cli
+
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
@@ -22,11 +29,12 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Pushing the Docker image...
+      - echo Pushing the Docker image to ECR...
       - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
-      - printf '[{"name":"salesforce-marketing-lambda","imageUri":"%s"}]' 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest > imagedefinitions.json
-      - echo Deploying Lambda function using SAM...
-      - sam deploy --stack-name salesforce-marketing-lambda-stack --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION
+      - echo Deploying using AWS SAM...
+      - sam deploy --template-file template.yaml --stack-name salesforce-marketing-lambda-stack --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset --debug
 
 artifacts:
-  files: imagedefinitions.json
+  files:
+    - imagedefinitions.json
+    - template.yaml
