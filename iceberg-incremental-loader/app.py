@@ -3,7 +3,6 @@ import boto3
 from pyiceberg.catalog import load_catalog
 from pyiceberg.catalog import Catalog
 from pyiceberg.table import Table
-from pyiceberg.exceptions import PyIcebergException
 
 # Initialize boto3 clients
 ssm = boto3.client('ssm')
