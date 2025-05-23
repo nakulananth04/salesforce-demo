@@ -1,27 +1,30 @@
 version: 0.2
 
-phases:
-  install:
-    runtime-versions:
-      python: 3.9
-    commands:
-      - pip install --upgrade pip
-      - pip install aws-sam-cli
-  pre_build:
-    commands:
-      - echo Logging in to Amazon ECR... (if using container, optional)
-      # - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-  build:
-    commands:
-      - echo Building the Lambda package with SAM...
-      - sam build
-  post_build:
-    commands:
-      - echo Packaging the SAM application...
-      - sam package --template-file .aws-sam/build/template.yaml --s3-bucket $S3_BUCKET --output-template-file packaged.yaml
-      - echo Deploying the SAM application...
-      - sam deploy --template-file packaged.yaml --stack-name salesforce-lambda-stack --capabilities CAPABILITY_IAM
-
 env:
   variables:
-    S3_BUCKET: your-deployment-artifacts-bucket-name
+    ECR_REPOSITORY: salesforce-marketing-lambda
+    AWS_DEFAULT_REGION: ap-south-1
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $ECR_REPOSITORY:latest .
+      - docker tag $ECR_REPOSITORY:latest 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+      - printf '[{"name":"salesforce-marketing-lambda","imageUri":"%s"}]' 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest > imagedefinitions.json
+
+artifacts:
+  files: imagedefinitions.json
