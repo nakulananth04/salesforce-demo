@@ -35,13 +35,14 @@ def set_last_snapshot_id(snapshot_id):
 
 def lambda_handler(event, context):
     # Load Iceberg catalog (HadoopCatalog points to S3 base path)
-    catalog: Catalog = load_catalog(
-        name=CATALOG_NAME,
-        config={
-            "type": CATALOG_TYPE,
-            "warehouse": S3_BASE_PATH,
-        }
-    )
+    # catalog: Catalog = load_catalog(
+    #     name=CATALOG_NAME,
+    #     config={
+    #         "type": CATALOG_TYPE,
+    #         "warehouse": S3_BASE_PATH,
+    #     }
+    # )
+    catalog = load_catalog("my_glue_catalog")  # No config param
 
     # Example: specify table name here
     table_name = "salesforce.db.campaign"
