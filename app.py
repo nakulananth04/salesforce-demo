@@ -157,3 +157,4 @@ def lambda_handler(event, context):
         'statusCode': 200,
         'body': f'Sample data uploaded to s3://{bucket}/{base_path}'
     }
+
