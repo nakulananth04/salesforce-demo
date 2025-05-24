@@ -12,6 +12,5 @@ phases:
 
       - echo "Updating Glue job: parquet-cleaner-job"
 
-      - |
-        aws glue update-job --job-name parquet-cleaner-job \
-        --job-update "{\"Command\": {\"ScriptLocation\": \"s3://glue-script-salesforce/parquet-cleaner-job/script.py\"}}"
+      - >-
+        aws glue update-job --job-name parquet-cleaner-job --job-update '{"Command": {"ScriptLocation": "s3://glue-script-salesforce/parquet-cleaner-job/script.py", "Name": "Data Cleaning ETL"}}'
