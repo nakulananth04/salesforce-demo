@@ -30,31 +30,26 @@ CONFIG = {
 dynamo_values_to_update = {}
 dynamodb = boto3.resource('dynamodb')
 snapshot_table = dynamodb.Table(CONFIG["DYNAMODB_TABLE"])
-ssm = boto3.client('ssm', region_name='ap-south-1')
-param_name = 'SNOWFLAKE_PASSWORD'
-response = ssm.get_parameter(Name=param_name)
-SNOWFLAKE_PASSWORD = response['Parameter']['Value'].strip()
-
-print(os.environ['SNOWFLAKE_USER'])
-print(os.environ['SNOWFLAKE_DATABASE'])
-print(os.environ['SNOWFLAKE_ACCOUNT'])
-print(type(os.environ['SNOWFLAKE_USER']))
-print(len(os.environ['SNOWFLAKE_USER']))
-print(SNOWFLAKE_PASSWORD)
-
-if CONFIG.get('LOAD_TO_SNOWFLAKE', False):
-    snowflake_conn = snowflake.connector.connect(
-        user=os.environ['SNOWFLAKE_USER'],
-        password=SNOWFLAKE_PASSWORD,
-        account=os.environ['SNOWFLAKE_ACCOUNT'],
-        warehouse=os.environ['SNOWFLAKE_WAREHOUSE'],
-        database=os.environ['SNOWFLAKE_DATABASE'],
-        schema=os.environ['SNOWFLAKE_SCHEMA'],
-        role=os.environ['SNOWFLAKE_ROLE']
-    )
+snowflake_conn = None
+SNOWFLAKE_PASSWORD = ''
 
 
 def lambda_handler(event,context):
+
+    global SNOWFLAKE_PASSWORD
+    global snowflake_conn
+    SNOWFLAKE_PASSWORD = get_ssm_parameter('SNOWFLAKE_PASSWORD')
+
+    if CONFIG.get('LOAD_TO_SNOWFLAKE', False):
+        snowflake_conn = snowflake.connector.connect(
+            user=os.environ['SNOWFLAKE_USER'],
+            password=SNOWFLAKE_PASSWORD,
+            account=os.environ['SNOWFLAKE_ACCOUNT'],
+            warehouse=os.environ['SNOWFLAKE_WAREHOUSE'],
+            database=os.environ['SNOWFLAKE_DATABASE'],
+            schema=os.environ['SNOWFLAKE_SCHEMA'],
+            role=os.environ['SNOWFLAKE_ROLE']
+        )
     
     print("🚀 Starting Iceberg to Snowflake pipeline...")
     start_time = datetime.datetime.utcnow()
@@ -72,7 +67,18 @@ def lambda_handler(event,context):
         'body': json.dumps(result)
     }
 
-    
+
+def get_ssm_parameter(name, region='ap-south-1'):
+    ssm = boto3.client('ssm', region_name=region)
+    try:
+        response = ssm.get_parameter(
+            Name=name,
+            WithDecryption=True  # Crucial for SecureString
+        )
+        return response['Parameter']['Value']
+    except Exception as e:
+        print(f"Error retrieving parameter {name}: {str(e)}")
+        raise
     
 
 def initialize_catalog():
