@@ -8,6 +8,7 @@ import boto3
 import sys
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from itertools import islice
 
 # Parse required args
 args = getResolvedOptions(sys.argv, ['JOB_NAME'])
@@ -50,7 +51,14 @@ def log(message, level="info"):
 
 import boto3
 s3 = boto3.client('s3')
-													  
+
+def chunked(iterable, size):
+    it = iter(iterable)
+    while True:
+        batch = list(islice(it, size))
+        if not batch:
+            break
+        yield batch										  
 																  
 def process_table_for_timestamp(table, timestamp):
     table_name = str(table['table_name'])
@@ -295,16 +303,15 @@ latest_processed = ''
 
 for timestamp in timestamp_folders:
     log(f"Processing timestamp folder: {timestamp}")
-
-    # Parallelize the inner loop (tables)
-    with ThreadPoolExecutor(max_workers=4) as executor:  # Tune worker count as needed
-        futures = [
-            executor.submit(process_table_for_timestamp, table, timestamp)
-            for table in tables
-        ]
-        for future in as_completed(futures):
-            future.result()  # Let exceptions surface or handle them here if needed
-
+    for table_batch in chunked(tables, 10):  # 10 threads max at a time
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [
+                executor.submit(process_table_for_timestamp, table, timestamp)
+                for table in table_batch
+            ]
+            for future in as_completed(futures):
+                future.result()
+                
     latest_processed = max(latest_processed, timestamp)
 
 # Update the parameter store with the latest processed folder
