@@ -7,8 +7,7 @@ phases:
   build:
     commands:
       - echo "Uploading Glue scripts to S3..."
-      - aws s3 cp glue-jobs/salesforce-iceberg-incremental/script.py s3://glue-script-salesforce/salesforce-iceberg-incremental/script.py
+      - aws s3 cp glue-jobs/parquet-cleaner-job/script.py s3://glue-script-salesforce/parquet-cleaner-job/script.py
 
-      - echo "Updating Glue job: salesforce-iceberg-incremental"
-      - aws glue update-job --job-name salesforce-iceberg-incremental \
-          --job-update '{"Command": {"ScriptLocation": "s3://glue-script-salesforce/salesforce-iceberg-incremental/script.py"}}'
+      - echo "Updating Glue job: parquet-cleaner-job"
+      - aws glue update-job --job-name parquet-cleaner-job --job-update "{\"Command\": {\"ScriptLocation\": \"s3://glue-script-salesforce/parquet-cleaner-job/script.py\"}}"
