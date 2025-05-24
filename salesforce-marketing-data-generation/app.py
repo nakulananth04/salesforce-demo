@@ -30,6 +30,23 @@ NUM_OPPORTUNITIES = int(os.environ['NUM_OPPORTUNITIES'])
 def random_date(start, end):
     return start + timedelta(days=random.randint(0, (end - start).days))
 
+def random_timestamp(start_date, end_date):
+    # Calculate random days between dates
+    delta_days = (end_date.date() - start_date.date()).days
+    random_days = random.randint(0, delta_days)
+    
+    # Calculate random seconds within a day (86400 seconds = 24 hours)
+    random_seconds = random.randint(0, 86399)
+    random_microseconds = random.randint(0, 999999)
+    
+    # Combine to create final timestamp
+    return (
+        start_date + 
+        timedelta(days=random_days) + 
+        timedelta(seconds=random_seconds) +
+        timedelta(microseconds=random_microseconds)
+    )
+
 def random_id():
     return uuid.uuid4().hex[:18].upper()
 
@@ -56,14 +73,14 @@ def lambda_handler(event, context):
         "INDUSTRY": faker.job(),
         "WEBSITE": faker.url(),
         "ANNUAL_REVENUE": round(random.uniform(1e5, 1e7), 2),
-        "CREATED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+        "CREATED_DATE": random_timestamp(datetime(2020, 1, 1), datetime(2023, 12, 31))
     } for _ in range(NUM_ACCOUNTS)])
     upload_parquet(df_account, base_path + "account.parquet")
 
     df_campaign = pd.DataFrame([{
         "CAMPAIGN_ID": random_id(),
         "CAMPAIGN_NAME": faker.catch_phrase(),
-        "START_DATE": (start := random_date(datetime.today() - timedelta(days=365), datetime.today())),
+        "START_DATE": (start := random_timestamp(datetime.today() - timedelta(days=365), datetime.today())),
         "END_DATE": start + timedelta(days=random.randint(7, 90)),
         "STATUS": random.choice(["Planned", "In Progress", "Completed"]),
         "BUDGET": round(random.uniform(1000, 100000), 2)
@@ -76,7 +93,7 @@ def lambda_handler(event, context):
         "LAST_NAME": faker.last_name(),
         "EMAIL": faker.email(),
         "PHONE": faker.phone_number(),
-        "CREATED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+        "CREATED_DATE": random_timestamp(datetime(2020, 1, 1), datetime(2023, 12, 31))
     } for _ in range(NUM_CONTACTS)])
     upload_parquet(df_contact, base_path + "contact.parquet")
 
@@ -89,7 +106,7 @@ def lambda_handler(event, context):
         "PHONE": faker.phone_number(),
         "STATUS": random.choice(["New", "Working", "Qualified"]),
         "CONVERTED_CONTACT_ID": random.choice(df_contact["CONTACT_ID"]),
-        "CREATED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+        "CREATED_DATE": random_timestamp(datetime(2020, 1, 1), datetime(2023, 12, 31))
     } for _ in range(NUM_LEADS)])
     upload_parquet(df_lead, base_path + "lead.parquet")
 
@@ -99,8 +116,8 @@ def lambda_handler(event, context):
         "CONTACT_ID": random.choice(df_contact["CONTACT_ID"]),
         "LEAD_ID": random.choice(df_lead["LEAD_ID"]),
         "STATUS": random.choice(["Sent", "Responded"]),
-        "FIRST_RESPONDED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31)),
-        "CREATED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+        "FIRST_RESPONDED_DATE": random_timestamp(datetime(2020, 1, 1), datetime(2023, 12, 31)),
+        "CREATED_DATE": random_timestamp(datetime(2020, 1, 1), datetime(2023, 12, 31))
     } for _ in range(NUM_CAMPAIGN_MEMBERS)])
     upload_parquet(df_campaign_member, base_path + "campaign_member.parquet")
 
@@ -109,7 +126,7 @@ def lambda_handler(event, context):
         "TEMPLATE_NAME": faker.bs(),
         "SUBJECT": faker.catch_phrase(),
         "HTML_CONTENT": f"<html><body><h1>{faker.catch_phrase()}</h1></body></html>",
-        "CREATED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+        "CREATED_DATE": random_timestamp(datetime(2020, 1, 1), datetime(2023, 12, 31))
     } for _ in range(NUM_EMAIL_TEMPLATES)])
     upload_parquet(df_template, base_path + "email_template.parquet")
 
@@ -117,7 +134,7 @@ def lambda_handler(event, context):
         "SEND_ID": random_id(),
         "CAMPAIGN_ID": random.choice(df_campaign["CAMPAIGN_ID"]),
         "EMAIL_TEMPLATE_ID": random.choice(df_template["TEMPLATE_ID"]),
-        "SEND_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31)),
+        "SEND_DATE": random_timestamp(datetime(2020, 1, 1), datetime(2023, 12, 31)),
         "SUBJECT_LINE": faker.catch_phrase(),
         "TOTAL_SENT": random.randint(50, 5000)
     } for _ in range(NUM_EMAIL_SENDS)])
@@ -137,13 +154,13 @@ def lambda_handler(event, context):
     df_event = pd.DataFrame([{
         "EVENT_ID": random_id(),
         "SUBJECT": faker.catch_phrase(),
-        "START_DATE_TIME": (start := random_date(datetime.today() - timedelta(days=365), datetime.today())),
+        "START_DATE_TIME": (start := random_timestamp(datetime.today() - timedelta(days=365), datetime.today())),
         "END_DATE_TIME": start + timedelta(hours=2),
         "TYPE": random.choice(["Webinar", "Meeting", "Demo"]),
         "RELATED_CAMPAIGN_ID": random.choice(df_campaign["CAMPAIGN_ID"]),
         "RELATED_CONTACT_ID": random.choice(df_contact["CONTACT_ID"]),
         "RELATED_LEAD_ID": random.choice(df_lead["LEAD_ID"]),
-        "CREATED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+        "CREATED_DATE": random_timestamp(datetime(2020, 1, 1), datetime(2023, 12, 31))
     } for _ in range(NUM_EVENTS)])
     upload_parquet(df_event, base_path + "event.parquet")
 
@@ -153,9 +170,9 @@ def lambda_handler(event, context):
         "ACCOUNT_ID": random.choice(df_account["ACCOUNT_ID"]),
         "STAGE_NAME": random.choice(["Prospecting", "Qualification", "Proposal", "Closed Won", "Closed Lost"]),
         "AMOUNT": round(random.uniform(5000, 100000), 2),
-        "CLOSE_DATE": random_date(datetime.today(), datetime.today() + timedelta(days=180)),
+        "CLOSE_DATE": random_timestamp(datetime.today(), datetime.today() + timedelta(days=180)),
         "CAMPAIGN_ID": random.choice(df_campaign["CAMPAIGN_ID"]),
-        "CREATED_DATE": random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+        "CREATED_DATE": random_timestamp(datetime(2020, 1, 1), datetime(2023, 12, 31))
     } for _ in range(NUM_OPPORTUNITIES)])
     upload_parquet(df_opportunity, base_path + "opportunity.parquet")
 
