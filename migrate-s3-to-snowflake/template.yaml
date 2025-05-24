@@ -1,27 +1,28 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
-Description: Salesforce Marketing Lambda Container Function
+Description: Snowflake Migration Container Function
 
 Resources:
   SalesforceMarketingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: SalesforceMarketingDataGenLambda
+      FunctionName: MigrateS3ToSnowflakeLambda
       PackageType: Image
-      ImageUri: 595245034069.dkr.ecr.ap-south-1.amazonaws.com/salesforce-marketing-lambda:latest
+      ImageUri: 595245034069.dkr.ecr.ap-south-1.amazonaws.com/migrate-s3-to-snowflake:latest
       Timeout: 60
       MemorySize: 512
       Role: arn:aws:iam::595245034069:role/salesforce-lambda-execution
       Environment:
         Variables:
-          NUM_ACCOUNTS: 100
-          NUM_CAMPAIGNS: 50
-          NUM_CONTACTS: 200
-          NUM_LEADS: 150
-          NUM_CAMPAIGN_MEMBERS: 300
-          NUM_EMAIL_TEMPLATES: 20
-          NUM_EMAIL_SENDS: 100
-          NUM_EMAIL_ENGAGEMENTS: 400
-          NUM_EVENTS: 100
-          NUM_OPPORTUNITIES: 100
+          CATALOG_NAME: glue_catalog
+          WAREHOUSE_PATH: s3://salesforce-marketing-processed/iceberg/salesforce.db/
+          GLUE_ENDPOINT: https://glue.ap-south-1.amazonaws.com
+          DYNAMODB_TABLE: iceberg_snapshot_tracker
+          DATABASE_NAME: salesforce
+          SNOWFLAKE_USER: NAKULANANTH
+          SNOWFLAKE_ACCOUNT: qd80134.ap-southeast-1
+          SNOWFLAKE_WAREHOUSE: SNOWFLAKE_LEARNING_WH
+          SNOWFLAKE_DATABASE: SALESFORCE_MARKETING
+          SNOWFLAKE_SCHEMA: RAW
+          SNOWFLAKE_ROLE: SALESFORCE_DEMO
