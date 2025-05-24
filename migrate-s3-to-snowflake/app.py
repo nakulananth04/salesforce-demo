@@ -35,6 +35,12 @@ param_name = 'SNOWFLAKE_PASSWORD'
 response = ssm.get_parameter(Name=param_name)
 SNOWFLAKE_PASSWORD = response['Parameter']['Value'].strip()
 
+print(os.environ['SNOWFLAKE_USER'])
+print(os.environ['SNOWFLAKE_DATABASE'])
+print(os.environ['SNOWFLAKE_ACCOUNT'])
+print(type(os.environ['SNOWFLAKE_USER']))
+print(len(os.environ['SNOWFLAKE_USER']))
+print(SNOWFLAKE_PASSWORD)
 
 if CONFIG.get('LOAD_TO_SNOWFLAKE', False):
     snowflake_conn = snowflake.connector.connect(
