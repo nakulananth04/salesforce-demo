@@ -325,7 +325,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
         
         # Create error logging table if not exists
         cursor.execute(f"""
-            CREATE OR REPLACE TABLE RAW.{table_name}_load_errors (
+            CREATE TABLE IF NOT EXISTS RAW.{table_name}_load_errors (
                 file_path STRING,
                 message STRING,
                 count INTEGER,
@@ -437,7 +437,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
         insert_columns = ", ".join(columns)
         insert_values = ", ".join([f"source.{col}" for col in columns])
         
-        cursor.execute(f"""
+        merge_sql = f""""
             MERGE INTO RAW.{table_name} target
             USING RAW.{table_name}_temp source
             ON target.{pk_column} = source.{pk_column}
@@ -448,11 +448,15 @@ def load_to_snowflake(connection, table_name, file_metadata):
             ) VALUES (
                 {insert_values}
             )
-        """)
+        """
+        cursor.execute(merge_sql)
         
         cursor.execute(f"TRUNCATE TABLE RAW.{table_name}_temp")
         return total_loaded, error_log
-        
+
+    except Exception as e:
+        print(f"Process failed: {e}")
+
     finally:
         # Write errors to S3 for backup
         if error_log:
