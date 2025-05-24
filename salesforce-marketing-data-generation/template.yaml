@@ -13,3 +13,15 @@ Resources:
       Timeout: 60
       MemorySize: 512
       Role: arn:aws:iam::595245034069:role/salesforce-lambda-execution
+      Environment:
+        Variables:
+          NUM_ACCOUNTS: 100
+          NUM_CAMPAIGNS: 50
+          NUM_CONTACTS: 200
+          NUM_LEADS: 150
+          NUM_CAMPAIGN_MEMBERS: 300
+          NUM_EMAIL_TEMPLATES: 20
+          NUM_EMAIL_SENDS: 100
+          NUM_EMAIL_ENGAGEMENTS: 400
+          NUM_EVENTS: 100
+          NUM_OPPORTUNITIES: 100
