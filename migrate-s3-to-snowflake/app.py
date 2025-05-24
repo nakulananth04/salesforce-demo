@@ -60,6 +60,47 @@ def lambda_handler(event,context):
     duration = (datetime.datetime.utcnow() - start_time).total_seconds()
     print(f"Pipeline completed in {duration:.2f} seconds")
     print(f"Overall status: {result['status'].upper()}")
+    if result['status'] == 'failed':
+        print("\n❌ Pipeline failed completely:")
+        print(f"Error: {result['error']}")
+        return
+        
+    # Only show summary if we have one
+    if 'summary' in result:
+        print("\n📊 Summary:")
+        print(f"• Tables processed: {result['summary']['tables_processed']}")
+        print(f"• Successful tables: {result['summary']['tables_successful']}")
+        print(f"• Tables with new files: {result['summary']['tables_with_new_files']}")
+        if 'snowflake_load_success' in result['summary']:
+            print(f"• Snowflake loads succeeded: {result['summary']['snowflake_load_success']}")
+            print(f"• Total files loaded: {result['summary']['total_files_loaded']}")
+    else:
+        print("\n⚠️ No summary available (partial failure)")
+
+    # 5. Detailed table results (if available)
+    if 'results' in result:
+        print("\n🔍 Detailed Results:")
+        for table_name, table_result in result['results'].items():
+            status_icon = "✅" if table_result.get('status') == 'success' else "❌"
+            print(f"\n{status_icon} {table_name}:")
+            
+            if table_result.get('status') == 'success':
+                print(f"   • New files detected: {table_result.get('count', 0)}")
+                if 'snowflake_status' in table_result:
+                    sf_status = table_result['snowflake_status']
+                    print(f"   • Snowflake status: {sf_status.upper()}")
+                    if sf_status == 'success':
+                        print(f"   • Files loaded: {table_result.get('snowflake_loaded', 0)}")
+            if 'snowflake_errors' in table_result and table_result['snowflake_errors']:
+                print(f"   ⚠️  Load Errors ({len(table_result['snowflake_errors'])}):")
+                for error in table_result['snowflake_errors'][:3]:  # Show first 3 errors
+                    print(f"      - File: {error.get('file_path', 'unknown')}")
+                    print(f"        Error: {error.get('error', 'Unknown error')}")
+                    print(f"        Count: {error.get('count', 1)}")
+                
+                # Show S3 error log location if available
+                if any('s3_key' in e for e in table_result['snowflake_errors']):
+                    print("      Full error log available in S3")
     
     # Return the result, which could be used by downstream services if needed
     return {
