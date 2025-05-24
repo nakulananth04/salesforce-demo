@@ -436,8 +436,8 @@ def load_to_snowflake(connection, table_name, file_metadata):
         set_clause = ",\n    ".join([f"target.{col} = source.{col}" for col in set_columns])
         
         # Include all columns (including LAST_MODIFIED_TIMESTAMP) in INSERT
-        insert_columns = ", ".join(columns)
-        insert_values = ", ".join([f"source.{col}" for col in columns])
+        insert_columns = ", ".join(set_columns)
+        insert_values = ", ".join([f"source.{col}" for col in set_columns])
         
         merge_sql = f""""
             MERGE INTO RAW.{table_name} target
