@@ -322,7 +322,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
             STORAGE_INTEGRATION = SALESFORCE_S3_INTEGRATION_MARKETING
             FILE_FORMAT = (TYPE = 'PARQUET')
         """)
-        
+        print(f"Stage created for {table_name}")
         # Create error logging table if not exists
         cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS RAW.{table_name}_load_errors (
@@ -333,6 +333,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
                 batch_id STRING
             )
         """)
+        print(f"Temp created for {table_name}")
         
         # Process in batches
         for i in range(0, len(file_metadata), batch_size):
@@ -351,7 +352,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
                         MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE 
                         ON_ERROR = CONTINUE
                     """)
-                    
+                    print(f"Copy command ran for {table_name}")
                     # Capture and log errors
                     errors = cursor.fetchall()
                     if errors:
@@ -373,6 +374,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
                                 """,
                                 (error[0], error[1], error[2], batch_id)
                             )
+                            print(f"Inserted into Log table for {table_name}")
                     
                     total_loaded += (len(batch) - len(errors))
                     break
@@ -449,6 +451,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
                 {insert_values}
             )
         """
+        print(f"Merge SQL: {merge_sql}")
         cursor.execute(merge_sql)
         
         cursor.execute(f"TRUNCATE TABLE RAW.{table_name}_temp")
