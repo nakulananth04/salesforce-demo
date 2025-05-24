@@ -1,10 +1,39 @@
-version: 0.2
+version:0.2
 
 phases:
   build:
     commands:
-      - echo "Uploading script to S3..."
+      - echo "Uploading Iceberg job script to S3..."
       - aws s3 cp glue-jobs/salesforce-iceberg-incremental/script.py s3://glue-script-salesforce/salesforce-iceberg-incremental/script.py
-      - echo "Updating Glue job:salesforce-iceberg-incremental"
-      - aws glue update-job --job-name salesforce-iceberg-incremental --job-update "{\"Role\":\"arn:aws:iam::595245034069:role/codebuildrole\",\"ExecutionProperty\":{\"MaxConcurrentRuns\":1},\"Command\":{\"Name\":\"glueetl\",\"ScriptLocation\":\"s3://glue-script-salesforce/salesforce-iceberg-incremental/script.py\",\"PythonVersion\":\"3\"},\"DefaultArguments\":{\"--job-language\":\"python\",\"--enable-glue-datacatalog\":\"true\",\"--datalake-formats\":\"iceberg\",\"--TempDir\":\"s3://glue-script-salesforce/temp/\",\"--iceberg_warehouse_path\":\"s3://salesforce-marketing-processed/iceberg/\",\"--additional-python-modules\":\"boto3\",\"--extra-jars\":\"s3://aws-glue-assets-595245034069-ap-south-1/jars/iceberg-aws-bundle-1.4.0.jar,s3://aws-glue-assets-595245034069-ap-south-1/jars/iceberg-spark-runtime-3.4_2.12-1.3.0.jar,s3://aws-glue-assets-595245034069-ap-south-1/jars/aws-java-sdk-bundle-1.12.262.jar\"},\"GlueVersion\":\"4.0\",\"WorkerType\":\"G.2X\",\"NumberOfWorkers\":3,\"MaxRetries\":0,\"Timeout\":2880}"
 
+      - echo "Updating Glue job:salesforce-iceberg-incremental"
+      - aws glue update-job --job-name salesforce-iceberg-incremental --job-update "{
+          \"Role\":\"arn:aws:iam::595245034069:role/codebuildrole\",
+          \"ExecutionProperty\":{\"MaxConcurrentRuns\":1},
+          \"Command\":{
+            \"Name\":\"glueetl\",
+            \"ScriptLocation\":\"s3://glue-script-salesforce/salesforce-iceberg-incremental/script.py\",
+            \"PythonVersion\":\"3\"
+          },
+          \"DefaultArguments\":{
+            \"--enable-glue-datacatalog\":\"true\",
+            \"--job-bookmark-option\":\"job-bookmark-disable\",
+            \"--iceberg_warehouse_path\":\"s3://salesforce-marketing-processed/iceberg/\",
+            \"--TempDir\":\"s3://aws-glue-assets-595245034069-ap-south-1/temporary/\",
+            \"--extra-jars\":\"s3://aws-glue-assets-595245034069-ap-south-1/jars/iceberg-spark-runtime-3.4_2.12-1.3.0.jar,s3://aws-glue-assets-595245034069-ap-south-1/jars/iceberg-aws-bundle-1.4.0.jar\",
+            \"--enable-metrics\":\"true\",
+            \"--user-jars-first\":\"true\",
+            \"--spark-event-logs-path\":\"s3://aws-glue-assets-595245034069-ap-south-1/sparkHistoryLogs/\",
+            \"--enable-job-insights\":\"true\",
+            \"--additional-python-modules\":\"pyiceberg\",
+            \"--enable-observability-metrics\":\"true\",
+            \"--enable-continuous-cloudwatch-log\":\"true\",
+            \"--job-language\":\"python\",
+            \"--JOB_NAME\":\"salesforce-iceberg-incremental\"
+          },
+          \"GlueVersion\":\"4.0\",
+          \"WorkerType\":\"G.2X\",
+          \"NumberOfWorkers\":10,
+          \"MaxRetries\":0,
+          \"Timeout\":2880
+        }"

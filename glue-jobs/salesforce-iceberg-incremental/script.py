@@ -114,7 +114,7 @@ tables = [
         "partition_exprs": {
             "start_month": "date_trunc('month', START_DATE)"
         },
-        "sort_cols": ["START_DATE"],
+        "sort_cols": ["status","START_DATE"],
         "primary_key": "CAMPAIGN_ID"
     },
     {
