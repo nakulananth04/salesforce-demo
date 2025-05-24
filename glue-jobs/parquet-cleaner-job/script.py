@@ -10,6 +10,8 @@ import re
 import logging
 from datetime import datetime,timedelta
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from itertools import islice
 
 # Setup Logging
 def setup_logging():
@@ -55,6 +57,47 @@ def update_last_updated_timestamp(new_timestamp, parameter_name="LAST_UPDATED_TI
         Type='String',
         Overwrite=True
     )
+
+def chunked(iterable, size):
+    from itertools import islice
+    it = iter(iterable)
+    while True:
+        batch = list(islice(it, size))
+        if not batch:
+            break
+        yield batch
+
+def process_table(table, fields, timestamp_folder, out_path):
+    try:
+        raw_data_path = f"s3://{raw_data_bucket}/{timestamp_folder}/{table}.parquet"
+        log(f"Reading table: {table} from {raw_data_path}")
+        df = spark.read.parquet(raw_data_path)
+
+        # Find all timestamp columns dynamically
+        timestamp_cols = [f.name for f in df.schema.fields if isinstance(f.dataType, TimestampType)]
+        for ts_col in timestamp_cols:
+            df = df.filter(col(ts_col).cast("long") > 0)
+
+        # Validate & clean
+        validate_dataframe(df, fields, table)
+
+        if df.rdd.isEmpty():
+            log(f"DataFrame for table {table} at {timestamp_folder} is empty. Skipping write.")
+            return
+
+        df_single = df.coalesce(1)
+
+        temp_output_prefix = f"{timestamp_folder}/tmp_{table}"
+        temp_output_path = f"s3://{bucket_name}/{temp_output_prefix}"
+        df_single.write.mode("overwrite").parquet(temp_output_path)
+
+        final_s3_key = f"{timestamp_folder}/{table}.parquet"
+        move_single_parquet_file(bucket_name, temp_output_prefix, final_s3_key)
+
+        log(f"Successfully cleaned and saved {table} to {out_path}/{timestamp_folder}/{table}.parquet")
+    except Exception as e:
+        log(f"Failed to process {table} at timestamp {timestamp_folder}: {str(e)}", "error")
+
 
 def parse_timestamp(ts_str):
     # Validate format first: expect YYYY-MM-DD_HHMMSS
@@ -155,42 +198,15 @@ for timestamp_folder in filtered_timestamps:
     log(f"Processing timestamp folder: {timestamp_folder}")
     base_output_path = f"{out_path}/{timestamp_folder}/"
 
-    for table, fields in schemas.items():
-        try:
-            raw_data_path = f"s3://{raw_data_bucket}/{timestamp_folder}/{table}.parquet"
-            log(f"Reading table: {table} from {raw_data_path}")
-            df = spark.read.parquet(raw_data_path)
-
-            # Find all timestamp columns dynamically
-            timestamp_cols = [f.name for f in df.schema.fields if isinstance(f.dataType, TimestampType)]
-            # Filter rows where any timestamp column cast to long > 0
-            for ts_col in timestamp_cols:
-                df = df.filter(col(ts_col).cast("long") > 0)
-
-            # Validate & clean
-            validate_dataframe(df, fields, table)
-            # for field, dtype in fields.items():
-            #     df = safe_cast_column(df, field, dtype)
-
-            if df.rdd.isEmpty():
-                log(f"DataFrame for table {table} at {timestamp_folder} is empty. Skipping write.")
-                continue
-
-            # Coalesce to 1 partition for single output file
-            df_single = df.coalesce(1)
-
-            # Write to a temp folder (because Spark cannot write single files directly)
-            temp_output_prefix = f"{timestamp_folder}/tmp_{table}"
-            temp_output_path = f"s3://{bucket_name}/{temp_output_prefix}"
-            df_single.write.mode("overwrite").parquet(temp_output_path)
-
-            # Move and rename the single part file to <timestamp>/<table>.parquet
-            final_s3_key = f"{timestamp_folder}/{table}.parquet"
-            move_single_parquet_file(bucket_name, temp_output_prefix, final_s3_key)
-
-            log(f"Successfully cleaned and saved {table} to {base_output_path}{table}.parquet")
-        except Exception as e:
-            log(f"Failed to process {table} at timestamp {timestamp_folder}: {str(e)}", "error")
+    # Batch and process tables in parallel
+    for table_batch in chunked(schemas.items(), 10):  # 10 at a time
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [
+                executor.submit(process_table, table, fields, timestamp_folder, out_path)
+                for table, fields in table_batch
+            ]
+            for future in as_completed(futures):
+                future.result()  # Optional: catch/log exceptions
 
     latest_processed_ts = timestamp_folder
 
@@ -200,5 +216,3 @@ if latest_processed_ts:
 
 job.commit()
 log("Cleaning job completed successfully")
-
-
