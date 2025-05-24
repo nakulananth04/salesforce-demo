@@ -6,9 +6,9 @@ phases:
       python: 3.9
   build:
     commands:
-      - echo "Uploading Glue scripts to S3..."
+      - echo "Uploading parquet-cleaner-job script to S3..."
       - aws s3 cp glue-jobs/parquet-cleaner-job/script.py s3://glue-script-salesforce/parquet-cleaner-job/script.py
 
       - echo "Updating Glue job: parquet-cleaner-job"
-      - >
-        aws glue update-job --job-name parquet-cleaner-job --job-update "{\"Command\": {\"ScriptLocation\": \"s3://glue-script-salesforce/parquet-cleaner-job/script.py\"}}"
+      - aws glue update-job --job-name parquet-cleaner-job \
+          --job-update "{\"Command\": {\"ScriptLocation\": \"s3://glue-script-salesforce/parquet-cleaner-job/script.py\"}}"
