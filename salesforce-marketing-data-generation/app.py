@@ -16,16 +16,16 @@ bucket = 'salesforce-marketing-raw-data'
 print("Start")
 
 # === Row counts (edit these to control volume) ===
-NUM_ACCOUNTS = os.environ['NUM_ACCOUNTS']
-NUM_CAMPAIGNS = os.environ['NUM_CAMPAIGNS']
-NUM_CONTACTS = os.environ['NUM_CONTACTS']
-NUM_LEADS = os.environ['NUM_LEADS']
-NUM_CAMPAIGN_MEMBERS = os.environ['NUM_CAMPAIGN_MEMBERS']
-NUM_EMAIL_TEMPLATES = os.environ['NUM_EMAIL_TEMPLATES']
-NUM_EMAIL_SENDS = os.environ['NUM_EMAIL_SENDS']
-NUM_EMAIL_ENGAGEMENTS = os.environ['NUM_EMAIL_ENGAGEMENTS']
-NUM_EVENTS = os.environ['NUM_EVENTS']
-NUM_OPPORTUNITIES = os.environ['NUM_OPPORTUNITIES']
+NUM_ACCOUNTS = int(os.environ['NUM_ACCOUNTS'])
+NUM_CAMPAIGNS = int(os.environ['NUM_CAMPAIGNS'])
+NUM_CONTACTS = int(os.environ['NUM_CONTACTS'])
+NUM_LEADS = int(os.environ['NUM_LEADS'])
+NUM_CAMPAIGN_MEMBERS = int(os.environ['NUM_CAMPAIGN_MEMBERS'])
+NUM_EMAIL_TEMPLATES = int(os.environ['NUM_EMAIL_TEMPLATES'])
+NUM_EMAIL_SENDS = int(os.environ['NUM_EMAIL_SENDS'])
+NUM_EMAIL_ENGAGEMENTS = int(os.environ['NUM_EMAIL_ENGAGEMENTS'])
+NUM_EVENTS = int(os.environ['NUM_EVENTS'])
+NUM_OPPORTUNITIES = int(os.environ['NUM_OPPORTUNITIES'])
 
 def random_date(start, end):
     return start + timedelta(days=random.randint(0, (end - start).days))
