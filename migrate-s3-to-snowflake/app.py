@@ -374,7 +374,6 @@ def load_to_snowflake(connection, table_name, file_metadata):
                                 """,
                                 (error[0], error[1], error[2], batch_id)
                             )
-                            print(f"Inserted into Log table for {table_name}")
                     
                     total_loaded += (len(batch) - len(errors))
                     break
