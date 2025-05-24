@@ -322,7 +322,6 @@ def load_to_snowflake(connection, table_name, file_metadata):
             STORAGE_INTEGRATION = SALESFORCE_S3_INTEGRATION_MARKETING
             FILE_FORMAT = (TYPE = 'PARQUET')
         """)
-        print(f"Stage created for {table_name}")
         # Create error logging table if not exists
         cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS RAW.{table_name}_load_errors (
@@ -333,7 +332,6 @@ def load_to_snowflake(connection, table_name, file_metadata):
                 batch_id STRING
             )
         """)
-        print(f"Temp created for {table_name}")
         
         # Process in batches
         for i in range(0, len(file_metadata), batch_size):
