@@ -6,5 +6,5 @@ phases:
       - echo "Uploading script to S3..."
       - aws s3 cp glue-jobs/parquet-cleaner-job/script.py s3://glue-script-salesforce/parquet-cleaner-job/script.py
       - echo "Updating Glue job:parquet-cleaner-job"
-      - aws glue update-job --job-name parquet-cleaner-job --job-update "{\"Role\":\"arn:aws:iam::595245034069:role/codebuildrole\",\"ExecutionProperty\":{\"MaxConcurrentRuns\":1},\"Command\":{\"Name\":\"glueetl\",\"ScriptLocation\":\"s3://glue-script-salesforce/parquet-cleaner-job/script.py\",\"PythonVersion\":\"3\"},\"MaxRetries\":0,\"Timeout\":2880,\"GlueVersion\":\"3.0\",\"WorkerType\":\"G.2X\",\"NumberOfWorkers\":3}"
+      - aws glue update-job --job-name parquet-cleaner-job --job-update "{\"Role\":\"arn:aws:iam::595245034069:role/codebuildrole\",\"ExecutionProperty\":{\"MaxConcurrentRuns\":1},\"Command\":{\"Name\":\"glueetl\",\"ScriptLocation\":\"s3://glue-script-salesforce/parquet-cleaner-job/script.py\",\"PythonVersion\":\"3\"},\"MaxRetries\":0,\"Timeout\":2880,\"GlueVersion\":\"3.0\",\"WorkerType\":\"G.2X\",\"NumberOfWorkers\":10}"
 
