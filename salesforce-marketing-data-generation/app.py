@@ -7,6 +7,7 @@ from faker import Faker
 from datetime import datetime, timedelta
 import random
 import uuid
+import os
 
 faker = Faker()
 s3 = boto3.client('s3')
@@ -15,16 +16,16 @@ bucket = 'salesforce-marketing-raw-data'
 print("Start")
 
 # === Row counts (edit these to control volume) ===
-NUM_ACCOUNTS = 100
-NUM_CAMPAIGNS = 50
-NUM_CONTACTS = 200
-NUM_LEADS = 150
-NUM_CAMPAIGN_MEMBERS = 300
-NUM_EMAIL_TEMPLATES = 20
-NUM_EMAIL_SENDS = 100
-NUM_EMAIL_ENGAGEMENTS = 400
-NUM_EVENTS = 100
-NUM_OPPORTUNITIES = 100
+NUM_ACCOUNTS = os.environ['NUM_ACCOUNTS']
+NUM_CAMPAIGNS = os.environ['NUM_CAMPAIGNS']
+NUM_CONTACTS = os.environ['NUM_CONTACTS']
+NUM_LEADS = os.environ['NUM_LEADS']
+NUM_CAMPAIGN_MEMBERS = os.environ['NUM_CAMPAIGN_MEMBERS']
+NUM_EMAIL_TEMPLATES = os.environ['NUM_EMAIL_TEMPLATES']
+NUM_EMAIL_SENDS = os.environ['NUM_EMAIL_SENDS']
+NUM_EMAIL_ENGAGEMENTS = os.environ['NUM_EMAIL_ENGAGEMENTS']
+NUM_EVENTS = os.environ['NUM_EVENTS']
+NUM_OPPORTUNITIES = os.environ['NUM_OPPORTUNITIES']
 
 def random_date(start, end):
     return start + timedelta(days=random.randint(0, (end - start).days))
