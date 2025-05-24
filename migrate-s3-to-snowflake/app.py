@@ -30,10 +30,11 @@ CONFIG = {
 dynamo_values_to_update = {}
 dynamodb = boto3.resource('dynamodb')
 snapshot_table = dynamodb.Table(CONFIG["DYNAMODB_TABLE"])
-ssm = boto3.client('ssm')
+ssm = boto3.client('ssm', region_name='ap-south-1')
 param_name = 'SNOWFLAKE_PASSWORD'
 response = ssm.get_parameter(Name=param_name)
 SNOWFLAKE_PASSWORD = response['Parameter']['Value'].strip()
+
 
 if CONFIG.get('LOAD_TO_SNOWFLAKE', False):
     snowflake_conn = snowflake.connector.connect(
