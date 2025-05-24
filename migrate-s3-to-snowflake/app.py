@@ -462,4 +462,3 @@ def load_to_snowflake(connection, table_name, file_metadata):
             except Exception as e:
                 print(f"Failed to write error log to S3: {e}")
         cursor.close()
-

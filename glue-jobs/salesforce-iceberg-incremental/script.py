@@ -7,6 +7,7 @@ from awsglue.job import Job
 import boto3
 import sys
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Parse required args
 args = getResolvedOptions(sys.argv, ['JOB_NAME'])
@@ -51,7 +52,41 @@ import boto3
 s3 = boto3.client('s3')
 													  
 																  
-	
+def process_table_for_timestamp(table, timestamp):
+    table_name = str(table['table_name'])
+    log(f"  Processing table: {table_name}")
+
+    try:
+        s3_path = f"s3://{source_bucket}/{timestamp}/{table_name}.parquet"
+        df = spark.read.parquet(s3_path)
+
+        # Rename and cast
+        actual_columns = [c.lower() for c in df.columns]
+        for c in df.columns:
+            df = df.withColumnRenamed(c, c.lower())
+
+        for field, dtype in table["fields"].items():
+            if field.lower() in actual_columns:
+                df = df.withColumn(field.lower(), col(field.lower()).cast(dtype))
+            else:
+                df = df.withColumn(field.lower(), lit(None).cast(dtype))
+
+        if "partition_exprs" in table:
+            for col_name, expr_str in table["partition_exprs"].items():
+                df = df.withColumn(col_name.lower(), expr(expr_str))
+
+        if "sort_cols" in table:
+            sort_cols = [c.lower() for c in table["sort_cols"]]
+            df = df.orderBy(*sort_cols)
+
+        iceberg_path = f"glue_catalog.salesforce.{str(table_name)}"
+        df.writeTo(iceberg_path) \
+          .partitionedBy(*[c.lower() for c in table["partition_cols"]]) \
+          .createOrReplace()
+
+        log(f"  Successfully processed {table_name} for {timestamp}")
+    except Exception as e:
+        log(f"  ERROR processing {table_name} in {timestamp}: {e}", "error")
 
 def list_timestamp_folders(bucket, prefix):
     s3_client = boto3.client("s3")
@@ -95,7 +130,7 @@ tables = [
         },
         "partition_cols": ["created_year"],
         "partition_exprs": {
-            "created_year": "date_trunc('year', CREATED_DATE)"
+            "created_year": "date_trunc('year', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
         },
         "sort_cols": ["CREATED_DATE"],
         "primary_key": "ACCOUNT_ID"
@@ -112,7 +147,7 @@ tables = [
         },
         "partition_cols": ["status", "start_month"],
         "partition_exprs": {
-            "start_month": "date_trunc('month', START_DATE)"
+            "start_month": "date_trunc('month', from_unixtime(CAST(START_DATE AS BIGINT)/1000000000))"
         },
         "sort_cols": ["status","START_DATE"],
         "primary_key": "CAMPAIGN_ID"
@@ -129,7 +164,7 @@ tables = [
         },
         "partition_cols": ["created_month"],
         "partition_exprs": {
-            "created_month": "date_trunc('month', CREATED_DATE)"
+            "created_month": "date_trunc('month', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
         },
         "sort_cols": ["CREATED_DATE"],
         "primary_key": "CONTACT_ID"
@@ -149,7 +184,7 @@ tables = [
         },
         "partition_cols": ["status", "created_month"],
         "partition_exprs": {
-            "created_month": "date_trunc('month', CREATED_DATE)"
+            "created_month": "date_trunc('month', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
         },
         "sort_cols": ["STATUS", "CREATED_DATE"],
         "primary_key": "LEAD_ID"
@@ -167,7 +202,7 @@ tables = [
         },
         "partition_cols": ["status", "created_month"],
         "partition_exprs": {
-            "created_month": "date_trunc('month', CREATED_DATE)"
+            "created_month": "date_trunc('month', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
         },
         "sort_cols": ["STATUS", "CREATED_DATE"],
         "primary_key": "MEMBER_ID"
@@ -183,7 +218,7 @@ tables = [
         },
         "partition_cols": ["created_year"],
         "partition_exprs": {
-            "created_year": "date_trunc('year', CREATED_DATE)"
+            "created_year": "date_trunc('year', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
         },
         "sort_cols": ["CREATED_DATE"],
         "primary_key": "TEMPLATE_ID"
@@ -215,7 +250,7 @@ tables = [
         },
         "partition_cols": ["engagement_day"],
         "partition_exprs": {
-            "engagement_day": "date_trunc('day', ENGAGEMENT_TIMESTAMP)"
+            "engagement_day": "date_trunc('day', from_unixtime(CAST(ENGAGEMENT_TIMESTAMP AS BIGINT)/1000000000))"
         },
         "sort_cols": ["ENGAGEMENT_TIMESTAMP"],
         "primary_key": "ENGAGEMENT_ID"
@@ -260,43 +295,15 @@ latest_processed = ''
 
 for timestamp in timestamp_folders:
     log(f"Processing timestamp folder: {timestamp}")
-    for table in tables:
-        table_name = str(table['table_name'])
-        log(f"  Processing table: {table_name}")
 
-        try:
-            s3_path = f"s3://{source_bucket}/{timestamp}/{table_name}.parquet"
-            df = spark.read.parquet(s3_path)
-
-            # Rename and cast
-            actual_columns = [c.lower() for c in df.columns]
-            for c in df.columns:
-                df = df.withColumnRenamed(c, c.lower())
-
-            for field, dtype in table["fields"].items():
-                if field.lower() in actual_columns:
-                    df = df.withColumn(field.lower(), col(field.lower()).cast(dtype))
-                else:
-                    df = df.withColumn(field.lower(), lit(None).cast(dtype))
-
-            if "partition_exprs" in table:
-                for col_name, expr_str in table["partition_exprs"].items():
-                    df = df.withColumn(col_name.lower(), expr(expr_str))
-
-            if "sort_cols" in table:
-                sort_cols = [c.lower() for c in table["sort_cols"]]
-                df = df.orderBy(*sort_cols)
-
-													 
-            iceberg_path = f"glue_catalog.salesforce.{str(table_name)}"
-            df.writeTo(iceberg_path) \
-              .partitionedBy(*[c.lower() for c in table["partition_cols"]]) \
-              .createOrReplace()
-
-            log(f"  Successfully processed {table_name} for {timestamp}")
-        except Exception as e:
-            log(f"  ERROR processing {table_name} in {timestamp}: {e}", "error")
-            continue
+    # Parallelize the inner loop (tables)
+    with ThreadPoolExecutor(max_workers=4) as executor:  # Tune worker count as needed
+        futures = [
+            executor.submit(process_table_for_timestamp, table, timestamp)
+            for table in tables
+        ]
+        for future in as_completed(futures):
+            future.result()  # Let exceptions surface or handle them here if needed
 
     latest_processed = max(latest_processed, timestamp)
 
@@ -315,5 +322,3 @@ if latest_processed:
 
 job.commit()
 log("Job completed successfully")
-
-
