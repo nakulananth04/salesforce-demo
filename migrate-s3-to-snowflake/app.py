@@ -439,15 +439,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
         insert_columns = ", ".join(set_columns)
         insert_values = ", ".join([f"source.{col}" for col in set_columns])
         
-        merge_sql = f""""
-            MERGE INTO RAW.{table_name} target
-            USING RAW.{table_name}_temp source
-            ON target.{pk_column} = source.{pk_column}
-            WHEN MATCHED THEN UPDATE SET
-                {set_clause}
-            WHEN NOT MATCHED THEN INSERT ({insert_columns}) 
-            VALUES ({insert_values});
-        """
+        merge_sql = f"""MERGE INTO RAW.{table_name} target USING RAW.{table_name}_temp source ON target.{pk_column} = source.{pk_column} WHEN MATCHED THEN UPDATE SET {set_clause} WHEN NOT MATCHED THEN INSERT ({insert_columns}) VALUES ({insert_values});"""
         print(f"Merge SQL: {merge_sql}")
         cursor.execute(merge_sql)
         
