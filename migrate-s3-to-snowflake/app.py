@@ -445,11 +445,8 @@ def load_to_snowflake(connection, table_name, file_metadata):
             ON target.{pk_column} = source.{pk_column}
             WHEN MATCHED THEN UPDATE SET
                 {set_clause}
-            WHEN NOT MATCHED THEN INSERT (
-                {insert_columns}
-            ) VALUES (
-                {insert_values}
-            )
+            WHEN NOT MATCHED THEN INSERT ({insert_columns}) 
+            VALUES ({insert_values});
         """
         print(f"Merge SQL: {merge_sql}")
         cursor.execute(merge_sql)
