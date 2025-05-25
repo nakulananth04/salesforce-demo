@@ -397,7 +397,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
             SELECT COLUMN_NAME 
             FROM SALESFORCE_MARKETING.INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = 'RAW'
-              AND TABLE_NAME = '{table_name.upper()}'
+              AND TABLE_NAME = '{str(table_name).upper()}'
               AND COLUMN_DEFAULT IS NULL
               AND IS_NULLABLE = 'NO'
             ORDER BY ORDINAL_POSITION
@@ -410,7 +410,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
                 SELECT COLUMN_NAME 
                 FROM SALESFORCE_MARKETING.INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_SCHEMA = 'RAW'
-                  AND TABLE_NAME = '{table_name.upper()}'
+                  AND TABLE_NAME = '{str(table_name).upper()}'
                 ORDER BY ORDINAL_POSITION
                 LIMIT 1
             """)
