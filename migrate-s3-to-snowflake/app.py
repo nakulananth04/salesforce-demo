@@ -306,6 +306,7 @@ def process_all_tables():
             snowflake_conn.close()
 
 def load_to_snowflake(connection, table_name, file_metadata):
+    print(f"Load to Snwoflake: {table_name}")
     """Load batch of files to Snowflake with retry logic and error capture"""
     max_retries = 3
     batch_size = 100
