@@ -414,8 +414,8 @@ def load_to_snowflake(connection, table_name, file_metadata):
                 LIMIT 1
             """)
             primary_key = cursor.fetchone()
-            if not primary_key:
-                raise ValueError(f"Cannot determine primary key for RAW.{table_name}")
+            # if not primary_key:
+            #     raise ValueError(f"Cannot determine primary key for RAW.{table_name}")
 
         pk_column = primary_key[0]
         
@@ -438,7 +438,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
         insert_values = ", ".join([f"source.{col}" for col in set_columns_2])
         
         merge_sql = f"""MERGE INTO RAW.{table_name} target USING RAW.{table_name}_temp source ON target.{pk_column} = source.{pk_column} WHEN MATCHED THEN UPDATE SET {set_clause} WHEN NOT MATCHED THEN INSERT ({insert_columns}) VALUES ({insert_values});"""
-        print(f"Merge SQL: {merge_sql}")
+        # print(f"Merge SQL: {merge_sql}")
         cursor.execute(merge_sql)
         
         cursor.execute(f"TRUNCATE TABLE RAW.{table_name}_temp")

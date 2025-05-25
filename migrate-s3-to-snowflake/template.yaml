@@ -10,7 +10,7 @@ Resources:
       FunctionName: MigrateS3ToSnowflakeLambda
       PackageType: Image
       ImageUri: 595245034069.dkr.ecr.ap-south-1.amazonaws.com/migrate-s3-to-snowflake:latest
-      Timeout: 60
+      Timeout: 900
       MemorySize: 512
       Role: arn:aws:iam::595245034069:role/salesforce-lambda-execution
       Environment:
