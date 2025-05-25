@@ -306,17 +306,7 @@ def process_all_tables():
             snowflake_conn.close()
 
 def load_to_snowflake(connection, table_name, file_metadata):
-    table_name_upper = str(table_name).upper
-    SNOWFLAKE_PASSWORD = get_ssm_parameter('SNOWFLAKE_PASSWORD')
-    connection = snowflake.connector.connect(
-            user=os.environ['SNOWFLAKE_USER'],
-            password=SNOWFLAKE_PASSWORD,
-            account=os.environ['SNOWFLAKE_ACCOUNT'],
-            warehouse=os.environ['SNOWFLAKE_WAREHOUSE'],
-            database=os.environ['SNOWFLAKE_DATABASE'],
-            schema=os.environ['SNOWFLAKE_SCHEMA'],
-            role=os.environ['SNOWFLAKE_ROLE']
-        )
+    table_name_upper = str(table_name).upper()
     """Load batch of files to Snowflake with retry logic and error capture"""
     max_retries = 3
     batch_size = 100
@@ -361,7 +351,6 @@ def load_to_snowflake(connection, table_name, file_metadata):
                         MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE 
                         ON_ERROR = CONTINUE
                     """)
-                    print(f"Copy command ran for {table_name}")
                     # Capture and log errors
                     errors = cursor.fetchall()
                     if errors:
