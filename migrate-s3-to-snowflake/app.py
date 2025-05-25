@@ -395,30 +395,20 @@ def load_to_snowflake(connection, table_name, file_metadata):
                     time.sleep(2 ** attempt)
 
         # Primary key detection and MERGE operation
-        cursor.execute(f"""
-            SELECT COLUMN_NAME 
-            FROM SALESFORCE_MARKETING.INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = 'RAW'
-              AND TABLE_NAME = '{table_name_upper}'
-              AND COLUMN_DEFAULT IS NULL
-              AND IS_NULLABLE = 'NO'
-            ORDER BY ORDINAL_POSITION
-            LIMIT 1
-        """)
+        pk_sql = "SELECT COLUMN_NAME FROM SALESFORCE_MARKETING.INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'RAW' AND TABLE_NAME = '" + table_name_upper + "' AND COLUMN_DEFAULT IS NULL AND IS_NULLABLE = 'NO' ORDER BY ORDINAL_POSITION LIMIT 1;"
+        print(pk_sql)
+        cursor.execute(pk_sql)
         
         primary_key = cursor.fetchone()
+        print(f"PK1: {primary_key}")
         if not primary_key:
-            cursor.execute(f"""
-                SELECT COLUMN_NAME 
-                FROM SALESFORCE_MARKETING.INFORMATION_SCHEMA.COLUMNS
-                WHERE TABLE_SCHEMA = 'RAW'
-                  AND TABLE_NAME = '{table_name_upper}'
-                ORDER BY ORDINAL_POSITION
-                LIMIT 1
-            """)
+            pk_sql = "SELECT COLUMN_NAME FROM SALESFORCE_MARKETING.INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'RAW' AND TABLE_NAME = '" + table_name_upper + "' ORDER BY ORDINAL_POSITION LIMIT 1;"
+            print(pk_sql)
+            cursor.execute(pk_sql)
             primary_key = cursor.fetchone()
+            print(f"PK2: {primary_key}")
             if not primary_key:
-                raise ValueError(f"Cannot determine primary key for RAW.{table_name}")
+                raise ValueError(f"Cannot determine primary key for RAW.{table_name_upper}")
 
         pk_column = primary_key[0]
         
