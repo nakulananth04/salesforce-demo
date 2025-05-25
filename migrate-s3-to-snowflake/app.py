@@ -306,7 +306,9 @@ def process_all_tables():
             snowflake_conn.close()
 
 def load_to_snowflake(connection, table_name, file_metadata):
-    print(f"Load to Snwoflake: {table_name}")
+    print(f"Load to Snowflake: {table_name}")
+    table_name_upper = str(table_name).upper()
+    print(table_name_upper)
     """Load batch of files to Snowflake with retry logic and error capture"""
     max_retries = 3
     batch_size = 100
@@ -397,7 +399,7 @@ def load_to_snowflake(connection, table_name, file_metadata):
             SELECT COLUMN_NAME 
             FROM SALESFORCE_MARKETING.INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = 'RAW'
-              AND TABLE_NAME = '{str(table_name).upper()}'
+              AND TABLE_NAME = '{table_name_upper}'
               AND COLUMN_DEFAULT IS NULL
               AND IS_NULLABLE = 'NO'
             ORDER BY ORDINAL_POSITION
@@ -410,13 +412,13 @@ def load_to_snowflake(connection, table_name, file_metadata):
                 SELECT COLUMN_NAME 
                 FROM SALESFORCE_MARKETING.INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_SCHEMA = 'RAW'
-                  AND TABLE_NAME = '{str(table_name).upper()}'
+                  AND TABLE_NAME = '{table_name_upper}'
                 ORDER BY ORDINAL_POSITION
                 LIMIT 1
             """)
             primary_key = cursor.fetchone()
-            # if not primary_key:
-            #     raise ValueError(f"Cannot determine primary key for RAW.{table_name}")
+            if not primary_key:
+                raise ValueError(f"Cannot determine primary key for RAW.{table_name}")
 
         pk_column = primary_key[0]
         
