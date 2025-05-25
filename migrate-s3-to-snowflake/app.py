@@ -306,6 +306,7 @@ def process_all_tables():
             snowflake_conn.close()
 
 def load_to_snowflake(connection, table_name, file_metadata):
+    table_name_upper = str(table_name).upper
     SNOWFLAKE_PASSWORD = get_ssm_parameter('SNOWFLAKE_PASSWORD')
     connection = snowflake.connector.connect(
             user=os.environ['SNOWFLAKE_USER'],
