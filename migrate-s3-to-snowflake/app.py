@@ -306,6 +306,15 @@ def process_all_tables():
             snowflake_conn.close()
 
 def load_to_snowflake(connection, table_name, file_metadata):
+    connection = snowflake.connector.connect(
+            user=os.environ['SNOWFLAKE_USER'],
+            password=SNOWFLAKE_PASSWORD,
+            account=os.environ['SNOWFLAKE_ACCOUNT'],
+            warehouse=os.environ['SNOWFLAKE_WAREHOUSE'],
+            database=os.environ['SNOWFLAKE_DATABASE'],
+            schema=os.environ['SNOWFLAKE_SCHEMA'],
+            role=os.environ['SNOWFLAKE_ROLE']
+        )
     print(f"Load to Snowflake: {table_name}")
     table_name_upper = str(table_name).upper()
     print(table_name_upper)
