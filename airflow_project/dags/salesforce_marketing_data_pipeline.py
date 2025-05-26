@@ -8,7 +8,7 @@ import requests
 import json
 
 AWS_REGION = 'ap-south-1'
-SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/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'
+SLACK_WEBHOOK_URL = '########'
 
 default_args = {
     'owner': 'airflow',
