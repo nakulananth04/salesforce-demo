@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: marketing_source
+    database: salesforce_marketing  
+    schema: raw
+    tables:
+      - name: campaign
+      - name: contact
+      - name: email_engagement
+      - name: email_send
+      - name: lead
+      - name: opportunity
+      - name: account
+      - name: email_template
+      - name: campaign_member
+      - name: event
+

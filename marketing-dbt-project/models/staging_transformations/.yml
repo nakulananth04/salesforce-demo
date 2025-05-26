@@ -1,0 +1,12 @@
+
+version: 2
+
+models:
+  - name: staging
+    description: "A starter dbt model"
+    columns:
+      - name: campaign_id
+        description: "The primary key for this table"
+        data_tests:
+          - unique
+          - not_null
