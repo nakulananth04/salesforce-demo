@@ -13,7 +13,7 @@ phases:
     commands:
       - echo "Installing required tools..."
       - pip install aws-sam-cli
-      - sudo yum install -y jq || sudo apt-get install -y jq
+      - sudo apt-get install -y jq
 
   pre_build:
     commands:
@@ -23,12 +23,12 @@ phases:
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - BUILD_TIMESTAMP=$(date +%Y%m%d%H%M%S)
       - IMAGE_TAG=${COMMIT_HASH}-${BUILD_TIMESTAMP}
-      - echo "Generated image tag: $IMAGE_TAG"
+      - echo "Generated image tag:$IMAGE_TAG"
 
   build:
     commands:
       - echo "Build started on $(date)"
-      - echo "Building Docker image with tag: $IMAGE_TAG"
+      - echo "Building Docker image with tag:$IMAGE_TAG"
       - cd $PROJECT_DIR
       - docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
       - docker tag $ECR_REPOSITORY:$IMAGE_TAG 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
