@@ -33,8 +33,8 @@ phases:
       - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
       - sam deploy --template-file template.yaml --stack-name $STACK_NAME --image-repository 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY --parameter-overrides ECRRepository=$ECR_REPOSITORY ImageTag=$IMAGE_TAG --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset
       - |
-        MAX_RETRIES=5
-        SLEEP_INTERVAL=20
+        MAX_RETRIES=2
+        SLEEP_INTERVAL=10
         RETRIES=0
         SUCCESS=0
         while [ $RETRIES -lt $MAX_RETRIES ]; do
@@ -56,6 +56,8 @@ phases:
           aws cloudformation describe-stack-events --stack-name $STACK_NAME --region $AWS_DEFAULT_REGION --max-items 20
           exit 1
         fi
+
+        exit 0
 
 artifacts:
   files:
