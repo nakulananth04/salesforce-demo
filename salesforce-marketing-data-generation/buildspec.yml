@@ -42,8 +42,8 @@ phases:
       - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
       
       - echo "Deploying using AWS SAM..."
-      - sam deploy --template-file template.yaml --stack-name $STACK_NAME --image-repository 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY --parameter-overrides ImageTag=$IMAGE_TAG --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset
-      
+      - sam deploy --template-file template.yaml --stack-name $STACK_NAME --image-repository 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY --parameter-overrides ECRRepository=$ECR_REPOSITORY ImageTag=$IMAGE_TAG --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset
+
       - echo "Verifying Lambda deployment..."
       - DEPLOYED_IMAGE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME --query 'Configuration.Code.ImageUri' --output text)
       - echo "Deployed image URI:$DEPLOYED_IMAGE"

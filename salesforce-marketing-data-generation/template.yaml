@@ -3,6 +3,15 @@ Transform: AWS::Serverless-2016-10-31
 
 Description: Salesforce Marketing Lambda Container Function
 
+Parameters:
+  ECRRepository:
+    Type: String
+    Description: Name of the ECR repository
+  ImageTag:
+    Type: String
+    Description: Tag of the container image
+    Default: latest
+
 Resources:
   SalesforceMarketingFunction:
     Type: AWS::Serverless::Function
