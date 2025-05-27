@@ -3,13 +3,22 @@ Transform: AWS::Serverless-2016-10-31
 
 Description: Snowflake Migration Container Function
 
+Parameters:
+  ECRRepository:
+    Type: String
+    Description: Name of the ECR repository
+  ImageTag:
+    Type: String
+    Description: Tag of the container image
+    Default: latest
+
 Resources:
   SalesforceMarketingFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: MigrateS3ToSnowflakeLambda
       PackageType: Image
-      ImageUri: 595245034069.dkr.ecr.ap-south-1.amazonaws.com/migrate-s3-to-snowflake:latest
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepository}:${ImageTag}"
       Timeout: 900
       MemorySize: 512
       Role: arn:aws:iam::595245034069:role/salesforce-lambda-execution
