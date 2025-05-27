@@ -14,6 +14,7 @@ s3 = boto3.client('s3')
 bucket = 'salesforce-marketing-raw-data'
 
 print("Start")
+print("New")
 
 # === Row counts (edit these to control volume) ===
 NUM_ACCOUNTS = int(os.environ['NUM_ACCOUNTS'])

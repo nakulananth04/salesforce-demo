@@ -4,37 +4,56 @@ env:
   variables:
     ECR_REPOSITORY: salesforce-marketing-lambda
     AWS_DEFAULT_REGION: ap-south-1
-    PROJECT_DIR: salesforce-marketing-data-generation  # Add this variable
+    PROJECT_DIR: salesforce-marketing-data-generation
+    LAMBDA_FUNCTION_NAME: SalesforceMarketingDataGenLambda
+    STACK_NAME: salesforce-marketing-lambda-stack
 
 phases:
   install:
     commands:
-      - echo Installing AWS SAM CLI...
+      - echo "Installing required tools..."
       - pip install aws-sam-cli
+      - sudo yum install -y jq || sudo apt-get install -y jq  # Cross-platform jq installation
 
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - echo "Logging in to Amazon ECR..."
       - aws --version
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - BUILD_TIMESTAMP=$(date +%Y%m%d%H%M%S)
+      - IMAGE_TAG=${COMMIT_HASH}-${BUILD_TIMESTAMP}
+      - echo "Generated image tag:$IMAGE_TAG"
 
   build:
     commands:
-      - echo Build started on `date`
-      - echo Building the Docker image...
-      - cd $PROJECT_DIR  # Navigate to the subfolder
-      - docker build -t $ECR_REPOSITORY:latest .
-      - docker tag $ECR_REPOSITORY:latest 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+      - echo "Build started on $(date)"
+      - echo "Building Docker image with tag:$IMAGE_TAG"
+      - cd $PROJECT_DIR
+      - docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+      - docker tag $ECR_REPOSITORY:$IMAGE_TAG 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+      - docker tag $ECR_REPOSITORY:$IMAGE_TAG 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing the Docker image...
+      - echo "Build completed on $(date)"
+      - echo "Pushing Docker images..."
+      - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
       - docker push 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
-      - echo Deploying using AWS SAM...
-      - sam deploy --template-file template.yaml --stack-name salesforce-marketing-lambda-stack --image-repository 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset
+      
+      - echo "Deploying using AWS SAM..."
+      - sam deploy --template-file template.yaml --stack-name $STACK_NAME --image-repository 595245034069.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY --parameter-overrides ImageTag=$IMAGE_TAG --capabilities CAPABILITY_NAMED_IAM --region $AWS_DEFAULT_REGION --no-confirm-changeset --no-fail-on-empty-changeset
+      - echo "Verifying Lambda deployment..."
+      - DEPLOYED_IMAGE=$(aws lambda get-function --function-name $LAMBDA_FUNCTION_NAME --query 'Configuration.Code.ImageUri' --output text)
+      - echo "Deployed image URI:$DEPLOYED_IMAGE"
+      - if [[ "$DEPLOYED_IMAGE" != *"$IMAGE_TAG"* ]]; then
+          echo "ERROR:Deployment verification failed!"
+          echo "Expected tag:$IMAGE_TAG"
+          echo "Actual image:$DEPLOYED_IMAGE"
+          exit 1
+        fi
+      - echo "Deployment verified successfully!"
 
 artifacts:
   files:
-    - $PROJECT_DIR/imagedefinitions.json  # Updated paths
     - $PROJECT_DIR/template.yaml
