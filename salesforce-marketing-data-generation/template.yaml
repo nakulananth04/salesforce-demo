@@ -9,7 +9,7 @@ Resources:
     Properties:
       FunctionName: SalesforceMarketingDataGenLambda
       PackageType: Image
-      ImageUri: 595245034069.dkr.ecr.ap-south-1.amazonaws.com/salesforce-marketing-lambda:latest
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepository}:${ImageTag}"
       Timeout: 60
       MemorySize: 512
       Role: arn:aws:iam::595245034069:role/salesforce-lambda-execution
