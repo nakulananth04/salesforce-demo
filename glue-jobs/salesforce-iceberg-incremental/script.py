@@ -120,212 +120,210 @@ if len(ICEBERG_LAST_UPDATED_TIMESTAMP)>1:
     timestamp_folders = [f for f in timestamp_folders if f > ICEBERG_LAST_UPDATED_TIMESTAMP]
     log(timestamp_folders)
 
-if not timestamp_folders:
+if timestamp_folders:
+    tables = [
+        {
+            "table_name": "account",
+            "fields": {
+                "ACCOUNT_ID": "STRING",
+                "ACCOUNT_NAME": "STRING",
+                "INDUSTRY": "STRING",
+                "WEBSITE": "STRING",
+                "ANNUAL_REVENUE": "DECIMAL(15,2)",
+                "CREATED_DATE": "STRING"
+            },
+            "partition_cols": ["created_year"],
+            "partition_exprs": {
+                "created_year": "date_trunc('year', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
+            },
+            "sort_cols": ["CREATED_DATE"],
+            "primary_key": "ACCOUNT_ID"
+        },
+        {
+            "table_name": "campaign",
+            "fields": {
+                "CAMPAIGN_ID": "STRING",
+                "CAMPAIGN_NAME": "STRING",
+                "START_DATE": "STRING",
+                "END_DATE": "STRING",
+                "STATUS": "STRING",
+                "BUDGET": "DECIMAL(15,2)"
+            },
+            "partition_cols": ["status", "start_month"],
+            "partition_exprs": {
+                "start_month": "date_trunc('month', from_unixtime(CAST(START_DATE AS BIGINT)/1000000000))"
+            },
+            "sort_cols": ["status","START_DATE"],
+            "primary_key": "CAMPAIGN_ID"
+        },
+        {
+            "table_name": "contact",
+            "fields": {
+                "CONTACT_ID": "STRING",
+                "FIRST_NAME": "STRING",
+                "LAST_NAME": "STRING",
+                "EMAIL": "STRING",
+                "PHONE": "STRING",
+                "CREATED_DATE": "STRING"
+            },
+            "partition_cols": ["created_month"],
+            "partition_exprs": {
+                "created_month": "date_trunc('month', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
+            },
+            "sort_cols": ["CREATED_DATE"],
+            "primary_key": "CONTACT_ID"
+        },
+        {
+            "table_name": "lead",
+            "fields": {
+                "LEAD_ID": "STRING",
+                "FIRST_NAME": "STRING",
+                "LAST_NAME": "STRING",
+                "COMPANY": "STRING",
+                "EMAIL": "STRING",
+                "PHONE": "STRING",
+                "STATUS": "STRING",
+                "CONVERTED_CONTACT_ID": "STRING",
+                "CREATED_DATE": "STRING"
+            },
+            "partition_cols": ["status", "created_month"],
+            "partition_exprs": {
+                "created_month": "date_trunc('month', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
+            },
+            "sort_cols": ["STATUS", "CREATED_DATE"],
+            "primary_key": "LEAD_ID"
+        },
+        {
+            "table_name": "campaign_member",
+            "fields": {
+                "MEMBER_ID": "STRING",
+                "CAMPAIGN_ID": "STRING",
+                "CONTACT_ID": "STRING",
+                "LEAD_ID": "STRING",
+                "STATUS": "STRING",
+                "FIRST_RESPONDED_DATE": "STRING",
+                "CREATED_DATE": "STRING"
+            },
+            "partition_cols": ["status", "created_month"],
+            "partition_exprs": {
+                "created_month": "date_trunc('month', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
+            },
+            "sort_cols": ["STATUS", "CREATED_DATE"],
+            "primary_key": "MEMBER_ID"
+        },
+        {
+            "table_name": "email_template",
+            "fields": {
+                "TEMPLATE_ID": "STRING",
+                "TEMPLATE_NAME": "STRING",
+                "SUBJECT": "STRING",
+                "HTML_CONTENT": "STRING",
+                "CREATED_DATE": "STRING"
+            },
+            "partition_cols": ["created_year"],
+            "partition_exprs": {
+                "created_year": "date_trunc('year', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
+            },
+            "sort_cols": ["CREATED_DATE"],
+            "primary_key": "TEMPLATE_ID"
+        },
+        {
+            "table_name": "email_send",
+            "fields": {
+                "SEND_ID": "STRING",
+                "CAMPAIGN_ID": "STRING",
+                "EMAIL_TEMPLATE_ID": "STRING",
+                "SEND_DATE": "STRING",
+                "SUBJECT_LINE": "STRING",
+                "TOTAL_SENT": "INT"
+            },
+            "partition_cols": ["SEND_DATE"],
+            "sort_cols": ["SEND_DATE"],
+            "primary_key": "SEND_ID"
+        },
+        {
+            "table_name": "email_engagement",
+            "fields": {
+                "ENGAGEMENT_ID": "STRING",
+                "SEND_ID": "STRING",
+                "CONTACT_ID": "STRING",
+                "CONTACT_SK": "STRING",
+                "ENGAGEMENT_TYPE": "STRING",
+                "ENGAGEMENT_TIMESTAMP": "STRING",
+                "LINK_URL": "STRING"
+            },
+            "partition_cols": ["engagement_day"],
+            "partition_exprs": {
+                "engagement_day": "date_trunc('day', from_unixtime(CAST(ENGAGEMENT_TIMESTAMP AS BIGINT)/1000000000))"
+            },
+            "sort_cols": ["ENGAGEMENT_TIMESTAMP"],
+            "primary_key": "ENGAGEMENT_ID"
+        },
+        {
+            "table_name": "event",
+            "fields": {
+                "EVENT_ID": "STRING",
+                "SUBJECT": "STRING",
+                "START_DATE_TIME": "STRING",
+                "END_DATE_TIME": "STRING",
+                "TYPE": "STRING",
+                "RELATED_CAMPAIGN_ID": "STRING",
+                "RELATED_CONTACT_ID": "STRING",
+                "RELATED_LEAD_ID": "STRING",
+                "CREATED_DATE": "STRING"
+            },
+            "partition_cols": ["TYPE"],
+            "sort_cols": ["TYPE"],
+            "primary_key": "EVENT_ID"
+        },
+        {
+            "table_name": "opportunity",
+            "fields": {
+                "OPPORTUNITY_ID": "STRING",
+                "OPPORTUNITY_NAME": "STRING",
+                "ACCOUNT_ID": "STRING",
+                "STAGE_NAME": "STRING",
+                "AMOUNT": "DECIMAL(15,2)",
+                "CLOSE_DATE": "STRING",
+                "CAMPAIGN_ID": "STRING",
+                "CREATED_DATE": "STRING"
+            },
+            "partition_cols": ["STAGE_NAME"],
+            "sort_cols": ["STAGE_NAME"],
+            "primary_key": "OPPORTUNITY_ID"
+        }
+    ]
+    
+    
+    latest_processed = ''
+    
+    for timestamp in timestamp_folders:
+        log(f"Processing timestamp folder: {timestamp}")
+        for table_batch in chunked(tables, 10):  # 10 threads max at a time
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                futures = [
+                    executor.submit(process_table_for_timestamp, table, timestamp)
+                    for table in table_batch
+                ]
+                for future in as_completed(futures):
+                    future.result()
+                    
+        latest_processed = max(latest_processed, timestamp)
+    
+    # Update the parameter store with the latest processed folder
+    if latest_processed:
+        try:
+            ssm.put_parameter(
+                Name=param_name,
+                Value=latest_processed,
+                Type='String',
+                Overwrite=True
+            )
+            log(f"Updated SSM Parameter: {param_name} = {latest_processed}")
+        except Exception as e:
+            log(f"Failed to update SSM parameter: {e}", "ERROR")
+    
+    job.commit()
+    log("Job completed successfully")
+else:
     log("No new timestamp folders to process. Exiting.")
-    sys.exit(0)
-
-											 
-tables = [
-    {
-        "table_name": "account",
-        "fields": {
-            "ACCOUNT_ID": "STRING",
-            "ACCOUNT_NAME": "STRING",
-            "INDUSTRY": "STRING",
-            "WEBSITE": "STRING",
-            "ANNUAL_REVENUE": "DECIMAL(15,2)",
-            "CREATED_DATE": "STRING"
-        },
-        "partition_cols": ["created_year"],
-        "partition_exprs": {
-            "created_year": "date_trunc('year', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
-        },
-        "sort_cols": ["CREATED_DATE"],
-        "primary_key": "ACCOUNT_ID"
-    },
-    {
-        "table_name": "campaign",
-        "fields": {
-            "CAMPAIGN_ID": "STRING",
-            "CAMPAIGN_NAME": "STRING",
-            "START_DATE": "STRING",
-            "END_DATE": "STRING",
-            "STATUS": "STRING",
-            "BUDGET": "DECIMAL(15,2)"
-        },
-        "partition_cols": ["status", "start_month"],
-        "partition_exprs": {
-            "start_month": "date_trunc('month', from_unixtime(CAST(START_DATE AS BIGINT)/1000000000))"
-        },
-        "sort_cols": ["status","START_DATE"],
-        "primary_key": "CAMPAIGN_ID"
-    },
-    {
-        "table_name": "contact",
-        "fields": {
-            "CONTACT_ID": "STRING",
-            "FIRST_NAME": "STRING",
-            "LAST_NAME": "STRING",
-            "EMAIL": "STRING",
-            "PHONE": "STRING",
-            "CREATED_DATE": "STRING"
-        },
-        "partition_cols": ["created_month"],
-        "partition_exprs": {
-            "created_month": "date_trunc('month', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
-        },
-        "sort_cols": ["CREATED_DATE"],
-        "primary_key": "CONTACT_ID"
-    },
-    {
-        "table_name": "lead",
-        "fields": {
-            "LEAD_ID": "STRING",
-            "FIRST_NAME": "STRING",
-            "LAST_NAME": "STRING",
-            "COMPANY": "STRING",
-            "EMAIL": "STRING",
-            "PHONE": "STRING",
-            "STATUS": "STRING",
-            "CONVERTED_CONTACT_ID": "STRING",
-            "CREATED_DATE": "STRING"
-        },
-        "partition_cols": ["status", "created_month"],
-        "partition_exprs": {
-            "created_month": "date_trunc('month', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
-        },
-        "sort_cols": ["STATUS", "CREATED_DATE"],
-        "primary_key": "LEAD_ID"
-    },
-    {
-        "table_name": "campaign_member",
-        "fields": {
-            "MEMBER_ID": "STRING",
-            "CAMPAIGN_ID": "STRING",
-            "CONTACT_ID": "STRING",
-            "LEAD_ID": "STRING",
-            "STATUS": "STRING",
-            "FIRST_RESPONDED_DATE": "STRING",
-            "CREATED_DATE": "STRING"
-        },
-        "partition_cols": ["status", "created_month"],
-        "partition_exprs": {
-            "created_month": "date_trunc('month', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
-        },
-        "sort_cols": ["STATUS", "CREATED_DATE"],
-        "primary_key": "MEMBER_ID"
-    },
-    {
-        "table_name": "email_template",
-        "fields": {
-            "TEMPLATE_ID": "STRING",
-            "TEMPLATE_NAME": "STRING",
-            "SUBJECT": "STRING",
-            "HTML_CONTENT": "STRING",
-            "CREATED_DATE": "STRING"
-        },
-        "partition_cols": ["created_year"],
-        "partition_exprs": {
-            "created_year": "date_trunc('year', from_unixtime(CAST(CREATED_DATE AS BIGINT)/1000000000))"
-        },
-        "sort_cols": ["CREATED_DATE"],
-        "primary_key": "TEMPLATE_ID"
-    },
-    {
-        "table_name": "email_send",
-        "fields": {
-            "SEND_ID": "STRING",
-            "CAMPAIGN_ID": "STRING",
-            "EMAIL_TEMPLATE_ID": "STRING",
-            "SEND_DATE": "STRING",
-            "SUBJECT_LINE": "STRING",
-            "TOTAL_SENT": "INT"
-        },
-        "partition_cols": ["SEND_DATE"],
-        "sort_cols": ["SEND_DATE"],
-        "primary_key": "SEND_ID"
-    },
-    {
-        "table_name": "email_engagement",
-        "fields": {
-            "ENGAGEMENT_ID": "STRING",
-            "SEND_ID": "STRING",
-            "CONTACT_ID": "STRING",
-            "CONTACT_SK": "STRING",
-            "ENGAGEMENT_TYPE": "STRING",
-            "ENGAGEMENT_TIMESTAMP": "STRING",
-            "LINK_URL": "STRING"
-        },
-        "partition_cols": ["engagement_day"],
-        "partition_exprs": {
-            "engagement_day": "date_trunc('day', from_unixtime(CAST(ENGAGEMENT_TIMESTAMP AS BIGINT)/1000000000))"
-        },
-        "sort_cols": ["ENGAGEMENT_TIMESTAMP"],
-        "primary_key": "ENGAGEMENT_ID"
-    },
-    {
-        "table_name": "event",
-        "fields": {
-            "EVENT_ID": "STRING",
-            "SUBJECT": "STRING",
-            "START_DATE_TIME": "STRING",
-            "END_DATE_TIME": "STRING",
-            "TYPE": "STRING",
-            "RELATED_CAMPAIGN_ID": "STRING",
-            "RELATED_CONTACT_ID": "STRING",
-            "RELATED_LEAD_ID": "STRING",
-            "CREATED_DATE": "STRING"
-        },
-        "partition_cols": ["TYPE"],
-        "sort_cols": ["TYPE"],
-        "primary_key": "EVENT_ID"
-    },
-    {
-        "table_name": "opportunity",
-        "fields": {
-            "OPPORTUNITY_ID": "STRING",
-            "OPPORTUNITY_NAME": "STRING",
-            "ACCOUNT_ID": "STRING",
-            "STAGE_NAME": "STRING",
-            "AMOUNT": "DECIMAL(15,2)",
-            "CLOSE_DATE": "STRING",
-            "CAMPAIGN_ID": "STRING",
-            "CREATED_DATE": "STRING"
-        },
-        "partition_cols": ["STAGE_NAME"],
-        "sort_cols": ["STAGE_NAME"],
-        "primary_key": "OPPORTUNITY_ID"
-    }
-]
-
-
-latest_processed = ''
-
-for timestamp in timestamp_folders:
-    log(f"Processing timestamp folder: {timestamp}")
-    for table_batch in chunked(tables, 10):  # 10 threads max at a time
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [
-                executor.submit(process_table_for_timestamp, table, timestamp)
-                for table in table_batch
-            ]
-            for future in as_completed(futures):
-                future.result()
-                
-    latest_processed = max(latest_processed, timestamp)
-
-# Update the parameter store with the latest processed folder
-if latest_processed:
-    try:
-        ssm.put_parameter(
-            Name=param_name,
-            Value=latest_processed,
-            Type='String',
-            Overwrite=True
-        )
-        log(f"Updated SSM Parameter: {param_name} = {latest_processed}")
-    except Exception as e:
-        log(f"Failed to update SSM parameter: {e}", "ERROR")
-
-job.commit()
-log("Job completed successfully")

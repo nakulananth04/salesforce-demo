@@ -2,11 +2,52 @@
   config(
     schema='marketing',
     materialized='incremental',
-    unique_key='campaign_date_sk'
+    unique_key='campaign_date_sk',
+    on_schema_change='ignore'
   )
 }}
 
-WITH base AS (
+WITH filtered_campaign AS (
+  SELECT * FROM {{ ref('dim_campaign') }}
+  {% if is_incremental() %}
+    WHERE last_modified_timestamp > (
+      SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01'::timestamp_ntz)
+      FROM {{ this }}
+    )
+  {% endif %}
+),
+
+filtered_campaign_member_engagement AS (
+  SELECT * FROM {{ ref('dim_campaign_member_engagement') }}
+  {% if is_incremental() %}
+    WHERE last_modified_timestamp > (
+      SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01'::timestamp_ntz)
+      FROM {{ this }}
+    )
+  {% endif %}
+),
+
+filtered_email_engagement AS (
+  SELECT * FROM {{ ref('dim_email_engagement') }}
+  {% if is_incremental() %}
+    WHERE last_modified_timestamp > (
+      SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01'::timestamp_ntz)
+      FROM {{ this }}
+    )
+  {% endif %}
+),
+
+filtered_opportunity_performance AS (
+  SELECT * FROM {{ ref('dim_opportunity_performance') }}
+  {% if is_incremental() %}
+    WHERE last_modified_timestamp > (
+      SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01'::timestamp_ntz)
+      FROM {{ this }}
+    )
+  {% endif %}
+),
+
+base AS (
 
   SELECT
     dd.DATE_KEY,
@@ -27,17 +68,17 @@ WITH base AS (
     COUNT(DISTINCT dop.OPPORTUNITY_ID) AS opportunities_generated,
     SUM(dop.AMOUNT) AS opportunity_amount
 
-  FROM {{ ref('dim_campaign') }} dc
+  FROM filtered_campaign dc
   JOIN {{ ref('dim_date') }} dd
     ON dd.DATE_KEY BETWEEN dc.START_DATE AND COALESCE(dc.END_DATE, CURRENT_DATE())
 
-  LEFT JOIN {{ ref('dim_campaign_member_engagement') }} dcm 
+  LEFT JOIN filtered_campaign_member_engagement dcm 
     ON dc.CAMPAIGN_ID = dcm.CAMPAIGN_ID
 
-  LEFT JOIN {{ ref('dim_email_engagement') }} dee 
+  LEFT JOIN filtered_email_engagement dee 
     ON dcm.CONTACT_ID = dee.CONTACT_ID
 
-  LEFT JOIN {{ ref('dim_opportunity_performance') }} dop 
+  LEFT JOIN filtered_opportunity_performance dop 
     ON dc.CAMPAIGN_ID = dop.CAMPAIGN_ID
 
   GROUP BY
@@ -49,10 +90,3 @@ SELECT
   *,
   CURRENT_TIMESTAMP() AS last_modified_timestamp
 FROM base
-
-{% if is_incremental() %}
--- Optional: only process campaigns updated recently
--- WHERE last_modified_timestamp > (
---   SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01') FROM {{ this }}
--- )
-{% endif %}

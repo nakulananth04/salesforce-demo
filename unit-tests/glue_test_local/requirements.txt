@@ -1,0 +1,3 @@
+pyspark==3.3.2
+boto3
+aws-glue-sessions  # optional, if you want GlueContext locally (you might skip or mock this)

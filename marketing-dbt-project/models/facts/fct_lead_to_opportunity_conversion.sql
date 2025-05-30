@@ -6,8 +6,37 @@
   )
 }}
 
-WITH lead_base AS (
+WITH filtered_lead AS (
+  SELECT * FROM {{ ref('dim_lead') }}
+  {% if is_incremental() %}
+    WHERE last_modified_timestamp > (
+      SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01'::timestamp_ntz)
+      FROM {{ this }}
+    )
+  {% endif %}
+),
 
+filtered_lead_conversion AS (
+  SELECT * FROM {{ ref('dim_lead_conversion') }}
+  {% if is_incremental() %}
+    WHERE last_modified_timestamp > (
+      SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01'::timestamp_ntz)
+      FROM {{ this }}
+    )
+  {% endif %}
+),
+
+filtered_opportunity AS (
+  SELECT * FROM {{ ref('dim_opportunity') }}
+  {% if is_incremental() %}
+    WHERE last_modified_timestamp > (
+      SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01'::timestamp_ntz)
+      FROM {{ this }}
+    )
+  {% endif %}
+),
+
+lead_base AS (
   SELECT
     l.lead_id,
     l.first_name,
@@ -17,20 +46,17 @@ WITH lead_base AS (
     lc.conversion_date,
     lc.days_to_convert,
     l.converted_contact_id
-  FROM {{ ref('dim_lead') }} l
-  LEFT JOIN {{ ref('dim_lead_conversion') }} lc
+  FROM filtered_lead l
+  LEFT JOIN filtered_lead_conversion lc
     ON l.lead_id = lc.lead_id
-
 ),
 
 opportunity_data AS (
-
   SELECT
     opportunity_id,
     amount,
     account_id
-  FROM {{ ref('dim_opportunity') }}
-
+  FROM filtered_opportunity
 )
 
 SELECT

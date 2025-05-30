@@ -1,0 +1,219 @@
+version: 2
+
+models:
+  - name: fct_marketing_performance
+    description: >
+      This fact table records detailed marketing engagement data by linking engagements,
+      sends, campaigns, contacts, leads, events, and opportunities.
+    columns:
+      - name: FACT_SK
+        description: Surrogate key for the marketing performance fact record.
+        tests: [unique, not_null]
+      - name: ENGAGEMENT_SK
+        description: Surrogate key from dim_email_engagement.
+      - name: ENGAGEMENT_ID
+        description: Identifier for the engagement event.
+      - name: ENGAGEMENT_TYPE
+        description: Type of engagement (e.g., Open, Click).
+      - name: ENGAGEMENT_TIMESTAMP
+        description: Timestamp of the engagement event.
+      - name: LINK_URL
+        description: URL that was clicked (if engagement is Click).
+      - name: IS_OPEN
+        description: Boolean indicating if the engagement is an open.
+      - name: IS_CLICK
+        description: Boolean indicating if the engagement is a click.
+      - name: SEND_SK
+        description: Surrogate key for the email send.
+      - name: SEND_ID
+        description: Unique identifier for the email send event.
+      - name: EMAIL_TEMPLATE_ID
+        description: Template used in the email send.
+      - name: SEND_DATE
+        description: Date when the email was sent.
+      - name: SUBJECT_LINE
+        description: Subject line of the email.
+      - name: CAMPAIGN_SK
+        description: Surrogate key for the campaign.
+      - name: CAMPAIGN_ID
+        description: Unique identifier for the campaign.
+      - name: CAMPAIGN_NAME
+        description: Name of the campaign.
+      - name: CONTACT_SK
+        description: Surrogate key for the contact.
+      - name: CONTACT_ID
+        description: Unique identifier of the contact.
+      - name: CONTACT_FIRST_NAME
+        description: First name of the contact.
+      - name: CONTACT_LAST_NAME
+        description: Last name of the contact.
+      - name: LEAD_SK
+        description: Surrogate key for the lead.
+      - name: LEAD_ID
+        description: Lead identifier.
+      - name: LEAD_FIRST_NAME
+        description: First name of the lead.
+      - name: LEAD_LAST_NAME
+        description: Last name of the lead.
+      - name: OPPORTUNITY_SK
+        description: Surrogate key for the opportunity.
+      - name: OPPORTUNITY_ID
+        description: Unique identifier of the opportunity.
+      - name: OPPORTUNITY_NAME
+        description: Name of the opportunity.
+      - name: EVENT_SK
+        description: Surrogate key for the related event.
+      - name: EVENT_ID
+        description: Unique identifier of the event.
+      - name: EVENT_TYPE
+        description: Type of the event.
+      - name: MEMBER_SK
+        description: Surrogate key for the campaign member.
+      - name: MEMBER_ID
+        description: Unique identifier of the campaign member.
+      - name: ENGAGEMENT_DATE
+        description: Date of the engagement or event.
+      - name: ENGAGEMENT_HOUR
+        description: Hour of the engagement or event.
+      - name: DAYS_SINCE_CAMPAIGN_START
+        description: Days since the campaign started.
+      - name: LAST_MODIFIED_TIMESTAMP
+        description: Timestamp of last modification to this record.
+
+  - name: fct_campaign_performance
+    description: >
+      Daily summary of campaign-level performance including engagement, opportunities, and financials.
+    columns:
+      - name: campaign_date_sk
+        description: Surrogate key based on campaign and date.
+        tests: [unique, not_null]
+      - name: DATE_KEY
+        description: Foreign key to the dim_date table.
+      - name: CAMPAIGN_SK
+        description: Surrogate key for campaign.
+      - name: CAMPAIGN_ID
+        description: Unique ID of the campaign.
+      - name: CAMPAIGN_NAME
+        description: Name of the campaign.
+      - name: STATUS
+        description: Current status of the campaign.
+      - name: unique_contacts_engaged
+        description: Count of unique contacts who engaged.
+      - name: total_members
+        description: Total number of campaign members.
+      - name: total_engagements
+        description: Total engagement actions taken.
+      - name: total_opens
+        description: Total email opens.
+      - name: link_clicks
+        description: Total clicks tracked.
+      - name: opportunities_generated
+        description: Number of opportunities generated.
+      - name: opportunity_amount
+        description: Total monetary value of opportunities.
+      - name: last_modified_timestamp
+        description: Timestamp of last modification.
+
+  - name: fct_daily_performance
+    description: >
+      Daily performance tracking at the member/contact/lead/opportunity level including engagement metrics and conversion signals.
+    columns:
+      - name: daily_performance_sk
+        description: Surrogate key for daily performance record.
+        tests: [unique, not_null]
+      - name: campaign_sk
+        description: Campaign surrogate key.
+      - name: member_sk
+        description: Campaign member surrogate key.
+      - name: contact_sk
+        description: Contact surrogate key.
+      - name: lead_sk
+        description: Lead surrogate key.
+      - name: opportunity_sk
+        description: Opportunity surrogate key.
+      - name: date_key
+        description: Date of performance metrics.
+      - name: CAMPAIGN_BUDGET
+        description: Budget assigned to the campaign.
+      - name: UNIQUE_RECIPIENTS
+        description: Count of unique recipients.
+      - name: TOTAL_OPENS
+        description: Number of opens.
+      - name: TOTAL_CLICKS
+        description: Number of clicks.
+      - name: TOTAL_ENGAGEMENTS
+        description: Total number of engagements.
+      - name: EMAIL_OPENS
+        description: Total email opens.
+      - name: EVENT_ATTENDANCES
+        description: Total event attendance counts.
+      - name: IS_CONVERTED
+        description: Whether the lead was converted.
+      - name: DAYS_TO_CONVERT
+        description: Days taken to convert the lead.
+      - name: OPPORTUNITY_AMOUNT
+        description: Opportunity monetary value.
+      - name: DAYS_OPEN
+        description: Number of days the opportunity remained open.
+      - name: IS_WON
+        description: Whether the opportunity was won.
+      - name: OPEN_RATE
+        description: Open rate calculated.
+      - name: CLICK_THROUGH_RATE
+        description: Click-through rate calculated.
+      - name: LAST_MODIFIED_TIMESTAMP
+        description: Timestamp of last modification.
+
+  - name: fct_event_performance
+    description: >
+      Performance metrics around events and engagement behavior preceding opportunity creation.
+    columns:
+      - name: event_outcome_sk
+        description: Surrogate key for event outcome.
+        tests: [unique, not_null]
+      - name: event_id
+        description: Unique identifier of the event.
+      - name: subject
+        description: Subject line or topic of the event.
+      - name: outcome_status
+        description: Final outcome of the event.
+      - name: days_to_opportunity
+        description: Days until opportunity creation post-event.
+      - name: opportunity_id
+        description: Associated opportunity.
+      - name: total_engagements_before_event
+        description: Count of all engagements before the event.
+      - name: pre_event_clicks
+        description: Count of clicks before the event.
+      - name: hours_before_opportunity
+        description: Time lag between engagement and opportunity creation.
+      - name: last_modified_timestamp
+        description: Timestamp of last modification.
+
+  - name: fct_lead_to_opportunity_conversion
+    description: >
+      Conversion performance tracking from leads to opportunities.
+    columns:
+      - name: lead_sk
+        description: Surrogate key for the lead.
+        tests: [unique, not_null]
+      - name: lead_id
+        description: Unique lead ID.
+      - name: first_name
+        description: First name of the lead.
+      - name: last_name
+        description: Last name of the lead.
+      - name: status
+        description: Status of the lead.
+      - name: is_converted
+        description: Boolean indicating if the lead was converted.
+      - name: conversion_date
+        description: Date the lead was converted.
+      - name: days_to_convert
+        description: Number of days it took to convert the lead.
+      - name: opportunities_created
+        description: Number of opportunities created from this lead.
+      - name: total_pipeline
+        description: Total monetary value of the created opportunities.
+      - name: last_modified_timestamp
+        description: Timestamp of last modification.

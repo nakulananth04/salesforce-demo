@@ -6,7 +6,27 @@
   )
 }}
 
-WITH base AS (
+WITH filtered_event_outcome AS (
+  SELECT * FROM {{ ref('dim_event_outcome') }}
+  {% if is_incremental() %}
+    WHERE last_modified_timestamp > (
+      SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01'::timestamp_ntz)
+      FROM {{ this }}
+    )
+  {% endif %}
+),
+
+filtered_email_engagement AS (
+  SELECT * FROM {{ ref('dim_email_engagement') }}
+  {% if is_incremental() %}
+    WHERE last_modified_timestamp > (
+      SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01'::timestamp_ntz)
+      FROM {{ this }}
+    )
+  {% endif %}
+),
+
+base AS (
 
   SELECT
     eo.event_id,
@@ -20,14 +40,15 @@ WITH base AS (
       WHEN ee.engagement_type = 'Click' THEN ee.engagement_id 
     END) AS pre_event_clicks,
 
-   MIN(DATEDIFF(
-  'hour',
-  ee.engagement_timestamp,
-  DATEADD('day', eo.days_to_opportunity, CURRENT_DATE())
-)) AS hours_before_opportunity
-  FROM {{ ref('dim_event_outcome') }} eo
+    MIN(DATEDIFF(
+      'hour',
+      ee.engagement_timestamp,
+      DATEADD('day', eo.days_to_opportunity, CURRENT_DATE())
+    )) AS hours_before_opportunity
 
-  LEFT JOIN {{ ref('dim_email_engagement') }} ee 
+  FROM filtered_event_outcome eo
+
+  LEFT JOIN filtered_email_engagement ee 
     ON eo.event_id = ee.campaign_name
     AND ee.engagement_timestamp < DATEADD('day', eo.days_to_opportunity * -1, CURRENT_DATE())
 
@@ -41,10 +62,3 @@ SELECT
   *,
   CURRENT_TIMESTAMP() AS last_modified_timestamp
 FROM base
-
-{% if is_incremental() %}
--- Optional: Only process recent event outcomes
--- WHERE last_modified_timestamp > (
---   SELECT COALESCE(MAX(last_modified_timestamp), '1900-01-01') FROM {{ this }}
--- )
-{% endif %}

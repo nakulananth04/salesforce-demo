@@ -190,29 +190,28 @@ else:
 if not filtered_timestamps:
     log("No new timestamps found to process. Exiting.")
     job.commit()
-    sys.exit(0)
-
-latest_processed_ts = None
-
-for timestamp_folder in filtered_timestamps:
-    log(f"Processing timestamp folder: {timestamp_folder}")
-    base_output_path = f"{out_path}/{timestamp_folder}/"
-
-    # Batch and process tables in parallel
-    for table_batch in chunked(schemas.items(), 10):  # 10 at a time
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [
-                executor.submit(process_table, table, fields, timestamp_folder, out_path)
-                for table, fields in table_batch
-            ]
-            for future in as_completed(futures):
-                future.result()  # Optional: catch/log exceptions
-
-    latest_processed_ts = timestamp_folder
-
-if latest_processed_ts:
-    log(f"Updating LAST_UPDATED_TIMESTAMP to {latest_processed_ts}")
-    update_last_updated_timestamp(latest_processed_ts)
-
-job.commit()
-log("Cleaning job completed successfully")
+else:
+    latest_processed_ts = None
+    
+    for timestamp_folder in filtered_timestamps:
+        log(f"Processing timestamp folder: {timestamp_folder}")
+        base_output_path = f"{out_path}/{timestamp_folder}/"
+    
+        # Batch and process tables in parallel
+        for table_batch in chunked(schemas.items(), 10):  # 10 at a time
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                futures = [
+                    executor.submit(process_table, table, fields, timestamp_folder, out_path)
+                    for table, fields in table_batch
+                ]
+                for future in as_completed(futures):
+                    future.result()  # Optional: catch/log exceptions
+    
+        latest_processed_ts = timestamp_folder
+    
+    if latest_processed_ts:
+        log(f"Updating LAST_UPDATED_TIMESTAMP to {latest_processed_ts}")
+        update_last_updated_timestamp(latest_processed_ts)
+    
+    job.commit()
+    log("Cleaning job completed successfully")
